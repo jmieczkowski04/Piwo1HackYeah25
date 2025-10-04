@@ -24,3 +24,23 @@ def login_view(request):
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
     else:
         return JsonResponse({'error': 'Only GET method allowed'}, status=400)
+    
+
+@csrf_exempt
+def get_id_by_pesel(request):
+    if request.method == 'GET':
+        try:
+            data = json.loads(request.body)
+            pesel = data.get('pesel')
+            if pesel is None:
+                return JsonResponse({'error': f'You must give in body json containing pesel field'}, status=400)
+            
+            user = User.objects.filter(pesel=pesel).first()
+            if user is None:
+                return JsonResponse({'error': 'PESEL not found'}, status=404)
+            
+            return JsonResponse({'id': user.id})
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    else:
+        return JsonResponse({'error': 'Only GET method allowed'}, status=400)
