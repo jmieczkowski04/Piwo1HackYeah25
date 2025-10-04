@@ -6,10 +6,15 @@ services:
       - "3000:3000" # login.gov.pl
     depends_on:
       - login_gov_mock
+      - volcon_api
     networks:
       - volcon-network
   login_gov_mock:
     build: login_gov_mock
+    networks:
+      - volcon-network
+  volcon_api:
+    build: volcon_api
     networks:
       - volcon-network
 
