@@ -1,4 +1,4 @@
-import models
+from .models import User
 
 def verify_user(login, password):
     try:

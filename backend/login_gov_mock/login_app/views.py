@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 
-from database import verify_user
+from .database import verify_user
 
 @csrf_exempt 
 def login_view(request):
