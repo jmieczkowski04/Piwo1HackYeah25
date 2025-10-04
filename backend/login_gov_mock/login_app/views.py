@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 
-from .database import verify_user, create_user
+from .database import verify_user, create_user, is_user_unique
 from .models import User
 
 @csrf_exempt 
@@ -56,7 +56,7 @@ def register_view(request):
                 return JsonResponse({'error': f'You must give in body json containing fields: {", ".join(required_fields)}'}, status=400)
             
             # Check if user with the same login or pesel already exists
-            if User.objects.filter(login=data['login']).exists() or User.objects.filter(pesel=data['pesel']).exists():
+            if not is_user_unique(data['login'], data['pesel'], data['email']):
                 return JsonResponse({'error': 'User with this login or PESEL already exists'}, status=409)
             
             user = create_user(
