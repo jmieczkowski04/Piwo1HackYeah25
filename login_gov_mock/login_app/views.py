@@ -83,11 +83,11 @@ def register_view(request):
 
 @csrf_exempt
 def register_page(request):
-    print('siur1')
+    print('siur1', flush=True)
     message = None
-    print('siur2')
+    print('siur2', flush=True)
     if request.method == 'POST':
-        print('siur3')
+        print('siur3', flush=True)
         # Pobierz dane z formularza
         data = {
             'login': request.POST.get('login'),
