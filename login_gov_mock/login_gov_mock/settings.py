@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-71&(yk%74-ho&x^8-=z3vwpyw7se*+19=9fyp%^_ut8az%sn)3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["login.gov.pl"]
 
 
 # Application definition
