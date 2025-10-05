@@ -3,7 +3,7 @@
     <div class="navbar__inner">
       <router-link to="/" class="brand">
         <img class="brand__logo" src="@/assets/logo.png" alt="Logo" />
-        <span class="brand__name">Wolontariat</span>
+        <span class="brand__name">VolCon</span>
       </router-link>
 
       <nav class="nav">
