@@ -152,3 +152,53 @@ def fetch_calendar_payload() -> List[Dict[str, Any]]:
         for g in top_groups
     ]
     return result
+
+
+# api/external_user_serializers.py
+from rest_framework import serializers
+from .models import ExternalUser
+
+class ExternalUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExternalUser
+        fields = [
+            "external_user_id",
+            "pesel",
+            "name",
+            "surname",
+            "agreement_file",
+            "supervisor_id",
+            "institution_id",
+            "group_id",
+            "is_accepted",
+        ]
+        read_only_fields = ["external_user_id", "institution_id", "group_id"]
+
+class ExternalUserCreateSerializer(serializers.Serializer):
+    # Pola przyjmowane w POST (minimalny, praktyczny zestaw)
+    pesel = serializers.CharField(max_length=11)
+    name = serializers.CharField(max_length=255)
+    surname = serializers.CharField(max_length=255)
+    supervisor_id = serializers.IntegerField(required=False, allow_null=True)
+    is_accepted = serializers.BooleanField(required=False, default=False)
+    # Jeśli chcesz uploadować plik jako base64:
+    agreement_file_b64 = serializers.CharField(required=False, allow_blank=True)
+
+    def to_model_kwargs(self):
+        data = self.validated_data
+        file_b64 = data.get("agreement_file_b64")
+        file_bytes = None
+        if file_b64:
+            import base64
+            try:
+                file_bytes = base64.b64decode(file_b64)
+            except Exception:
+                file_bytes = None
+        return {
+            "pesel": data["pesel"],
+            "name": data["name"],
+            "surname": data["surname"],
+            "supervisor_id": data.get("supervisor_id"),
+            "is_accepted": data.get("is_accepted", False),
+            "agreement_file": file_bytes,
+        }

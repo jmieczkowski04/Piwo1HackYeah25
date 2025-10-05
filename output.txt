@@ -1,114 +1,4 @@
-==== ./output.txt ====
-
-
-==== ./frontend\.env ====
-# VITE_API_URL=http://localhost:8080
-
-
-==== ./frontend\.prettierrc.json ====
-{
-  "$schema": "https://json.schemastore.org/prettierrc",
-  "semi": false,
-  "singleQuote": true,
-  "printWidth": 100
-}
-
-
-==== ./frontend\jsconfig.json ====
-{
-  "compilerOptions": {
-    "paths": {
-      "@/*": ["./src/*"]
-    }
-  },
-  "exclude": ["node_modules", "dist"]
-}
-
-
-==== ./frontend\package.json ====
-{
-  "name": "frontend",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "engines": {
-    "node": "^20.19.0 || >=22.12.0"
-  },
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "format": "prettier --write src/"
-  },
-  "dependencies": {
-    "pinia": "^3.0.3",
-    "vue": "^3.5.22",
-    "vue-router": "^4.5.1"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.1",
-    "axios": "^1.12.2",
-    "prettier": "3.6.2",
-    "sass": "^1.93.2",
-    "vite": "^7.1.7",
-    "vite-plugin-vue-devtools": "^8.0.2"
-  }
-}
-
-
-==== ./frontend\vite.config.js ====
-import { fileURLToPath, URL } from 'node:url'
-
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
-
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [vue(), vueDevTools()],
-  css: {
-    preprocessorOptions: {
-      scss: {
-        additionalData: `@use "@/assets/variables.scss" as *;`,
-      },
-    },
-  },
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-    },
-  },
-  server: {
-    proxy: {
-      '/api': { target: 'http://localhost:8080', changeOrigin: true },
-    },
-  },
-})
-
-
-==== ./frontend\.vscode\extensions.json ====
-{
-  "recommendations": [
-    "Vue.volar",
-    "esbenp.prettier-vscode"
-  ]
-}
-
-
-==== ./frontend\.vscode\settings.json ====
-{
-  "explorer.fileNesting.enabled": true,
-  "explorer.fileNesting.patterns": {
-    "tsconfig.json": "tsconfig.*.json, env.d.ts",
-    "vite.config.*": "jsconfig*, vitest.config.*, cypress.config.*, playwright.config.*",
-    "package.json": "package-lock.json, pnpm*, .yarnrc*, yarn*, .eslint*, eslint*, .oxlint*, oxlint*, .prettier*, prettier*, .editorconfig"
-  },
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode"
-}
-
-
-==== ./frontend\data\endpoints\endpoints.txt ====
+==== ./endpoints.txt ====
 User
     GET /user/:user_id
     bez niego zwraca dane aktualnego, z nim docelowego
@@ -179,152 +69,138 @@ Alerts
     GET/PATCH/DEL /event/:event_id/alert/alert_id
 
 Org
-    POST /institution
+    POST /organization
     Tworzy organizacje
 
-    GET/PATCH/DEL /institution/:institution_id
+    GET/PATCH/DEL /organization/:organization_id
 
-    GET /institution/unconfirmed
+    GET /organization/unconfirmed
     zwraca organizacje czekające na zatwierdzenie
 
-    POST /institution/:institution_id/confirm
+    POST /organization/:organization_id/confirm
 
-    POST/GET/PATCH/DEL /institution/:institution_id/user/:user_id
+    POST/GET/PATCH/DEL /organization/:organization_id/user/:user_id
 
 
 Specjalne user_id = me, czyli bierzemy user id z tokena login gov
 
 
-==== ./frontend\data\types\alert.json ====
+==== ./output.txt ====
+
+
+==== ./login_gov_mock/requirements.txt ====
+appdirs==1.4.4
+asgiref==3.9.2
+attrs==25.3.0
+beautifulsoup4==4.7.1
+cached-property==2.0.1
+certifi==2025.8.3
+charset-normalizer==3.4.3 
+defusedxml==0.7.1
+Django==5.2.7
+djangorestframework==3.16.1
+djangorestframework_simplejwt==5.5.1
+idna==3.10
+isodate==0.7.2
+lxml==6.0.2
+PyJWT==2.10.1
+pytz==2025.2
+RegonAPI==1.3.1
+requests==2.32.5
+requests-toolbelt==1.0.0
+six==1.17.0
+soupsieve==2.8
+sqlparse==0.5.3
+urllib3==2.5.0
+zeep==3.3.1
+
+
+==== ./frontend/package.json ====
 {
-  "id": "string",
-  "user_id": "string",
-  "event_id": "string",
-  "type": "string",
-  "condition": "string"
-}
-
-
-==== ./frontend\data\types\event.json ====
-{
-  "id": "string",
-  "name": "string",
-  "description": "string",
-  "status": "string",
-  "institution_id": "string",
-  "groups": [
-    {
-      "id": "string"
-    }
-  ],
-  "start_date": "string",
-  "end_date": "string"
-}
-
-
-==== ./frontend\data\types\group.json ====
-{
-  "id": "string",
-  "name": "string",
-  "description": "string",
-  "admin_id": "string",
-  "parent_group_id": "string",
-  "institution_id": "string",
-  "location": {
-    "lat": "number",
-    "lng": "number"
+  "name": "frontend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
   },
-  "groups": [
-    {
-      "id": "string"
-    }
-  ],
-  "tasks": [
-    {
-      "id": "string"
-    }
-  ]
-}
-
-
-==== ./frontend\data\types\institution.json ====
-{
-  "id": "string",
-  "name": "string",
-  "description": "string",
-  "status": "string",
-  "admins": [
-    {
-      "id": "string"
-    }
-  ],
-  "events": [
-    {
-      "id": "string"
-    }
-  ]
-}
-
-
-==== ./frontend\data\types\notification.json ====
-{
-  "id": "string",
-  "user_id": "string",
-  "type": "string",
-  "condition": "string"
-}
-
-
-==== ./frontend\data\types\opinion.json ====
-{
-  "id": "string",
-  "group_id": "string",
-  "rating": "number",
-  "comment": "string"
-}
-
-
-==== ./frontend\data\types\task.json ====
-{
-  "id": "string",
-  "name": "string",
-  "description": "string",
-  "group_id": "string",
-  "start_date": "string",
-  "end_date": "string",
-  "location": {
-    "lat": "number",
-    "lng": "number"
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "format": "prettier --write src/"
   },
-  "users": [
-    {
-      "id": "string"
-    }
-  ]
-}
-
-
-==== ./frontend\data\types\user.json ====
-{
-  "id": "string",
-  "coordinates": {
-    "lat": "number",
-    "lng": "number"
+  "dependencies": {
+    "pinia": "^3.0.3",
+    "vue": "^3.5.22",
+    "vue-router": "^4.5.1"
   },
-  "events": [
-    {
-      "id": "string"
-    }
-  ],
-  "opinions": [
-    {
-      "id": "string"
-    }
-  ]
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "axios": "^1.12.2",
+    "prettier": "3.6.2",
+    "sass": "^1.93.2",
+    "vite": "^7.1.7",
+    "vite-plugin-vue-devtools": "^8.0.2"
+  }
 }
 
 
-==== ./frontend\src\App.vue ====
+==== ./frontend/.prettierrc.json ====
+{
+  "$schema": "https://json.schemastore.org/prettierrc",
+  "semi": false,
+  "singleQuote": true,
+  "printWidth": 100
+}
+
+
+==== ./frontend/.env ====
+# VITE_API_URL=http://localhost:8080
+
+
+==== ./frontend/jsconfig.json ====
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist"]
+}
+
+
+==== ./frontend/vite.config.js ====
+import { fileURLToPath, URL } from 'node:url'
+
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import vueDevTools from 'vite-plugin-vue-devtools'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [vue(), vueDevTools()],
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@use "@/assets/variables.scss" as *;`,
+      },
+    },
+  },
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+  server: {
+    proxy: {
+      '/api': { target: 'http://localhost:8080', changeOrigin: true },
+    },
+  },
+})
+
+
+==== ./frontend/src/App.vue ====
 <template>
   <MainView />
 </template>
@@ -336,7 +212,7 @@ import MainView from '@/views/MainView.vue'
 <style scoped></style>
 
 
-==== ./frontend\src\main.js ====
+==== ./frontend/src/main.js ====
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import './assets/main.scss'
@@ -351,296 +227,7 @@ app.use(router)
 app.mount('#app')
 
 
-==== ./frontend\src\api\alert.js ====
-import api from './axios.js'
-import { ep } from './endpoints.js'
-
-// POST /event/:eventId/alert
-export const createAlert = (eventId, body) => api.post(ep.alert(eventId), body)
-
-// GET/PATCH/DEL /event/:eventId/alert/:alertId
-export const getAlert = (eventId, alertId) => api.get(ep.alertGet(eventId, alertId))
-export const updateAlert = (eventId, alertId, body) =>
-  api.patch(ep.alertGet(eventId, alertId), body)
-export const deleteAlert = (eventId, alertId) => api.delete(ep.alertGet(eventId, alertId))
-
-
-==== ./frontend\src\api\axios.js ====
-import axios from 'axios'
-
-const baseURL = import.meta.env.VITE_API_URL || '/api'
-
-const api = axios.create({
-  baseURL,
-  timeout: 15000,
-  withCredentials: false, // TODO zmień na true jeśli backend ustawia cookies
-})
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers = config.headers || {}
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
-
-api.interceptors.response.use(
-  (res) => res.data,
-  async (error) => {
-    const status = error?.response?.status
-    const message =
-      error?.response?.data?.message || error?.message || `${status || ''} request error`
-    return Promise.reject(new Error(message))
-  },
-)
-
-api.interceptors.response.use(
-  (res) => res.data,
-  (error) => {
-    const status = error?.response?.status
-    if (status === 401) {
-      localStorage.removeItem('token')
-    }
-    const message =
-      error?.response?.data?.message || error?.message || `${status || ''} request error`
-    return Promise.reject(new Error(message))
-  },
-)
-
-export default api
-
-
-==== ./frontend\src\api\certificate.js ====
-import api from './axios.js'
-import { ep } from './endpoints.js'
-
-// GET /event/:eventId/user/:userId
-export const getCertificate = (eventId, userId, params = {}) =>
-  api.get(ep.certificate(eventId, userId), { params })
-
-// Gdy backend zwraca PDF/plik – odbierz jako blob:
-export const getCertificateFile = (eventId, userId, params = {}) =>
-  api.get(ep.certificate(eventId, userId), { params, responseType: 'blob' })
-
-
-==== ./frontend\src\api\chat.js ====
-import api from './axios.js'
-import { ep } from './endpoints.js'
-
-// GET /event/:eventId/user/:userId/chat
-export const getChat = (eventId, userId, params = {}) =>
-  api.get(ep.chat(eventId, userId), { params })
-
-// POST /event/:eventId/user/:userId/chat
-export const sendChatMessage = (eventId, userId, body) => api.post(ep.chat(eventId, userId), body)
-
-
-==== ./frontend\src\api\endpoints.js ====
-export const ep = {
-  //User
-  me: () => '/user/me',
-  user: (id) => `/user/${id}`,
-  userLocalization: (id) => `/user/${id}/localization`,
-  eventsForUser: (id) => `/events/all/users/${id}`,
-
-  // Opinions
-  opinion: (userId) => `/user/${userId}/opinion`,
-  opinionGet: (userId, opinionId) => `/user/${userId}/opinion/${opinionId}`,
-
-  // Notifications
-  notification: (userId) => `/user/${userId}/notification`,
-  notificationGet: (userId, id) => `/user/${userId}/notification/${id}`,
-
-  // Tasks
-  task: (groupId) => `/group/${groupId}/task`,
-  taskGet: (groupId, taskId) => `/group/${groupId}/task/${taskId}`,
-  taskUser: (groupId, taskId) => `/group/${groupId}/task/${taskId}/user`,
-  taskUserGet: (groupId, taskId, userId) => `/group/${groupId}/task/${taskId}/user/${userId}`,
-  groupUsersFree: (groupId) => `/group/${groupId}/user/free`,
-
-  // Certificates / Chat
-  certificate: (eventId, userId) => `/event/${eventId}/user/${userId}`,
-  chat: (eventId, userId) => `/event/${eventId}/user/${userId}/chat`,
-
-  // Events
-  event: () => `/event`,
-  eventGet: (eventId) => `/event/${eventId}`,
-  eventUnconfirmed: () => `/event/unconfirmed`,
-  eventConfirm: (eventId) => `/event/${eventId}/confirm`,
-
-  // Groups
-  eventGroup: (eventId) => `/event/${eventId}/group`,
-  eventGroupGet: (eventId, groupId) => `/event/${eventId}/group/${groupId}`,
-  eventGroupUser: (eventId, groupId) => `/event/${eventId}/group/${groupId}/user`,
-  eventGroupUserGet: (eventId, groupId, userId) =>
-    `/event/${eventId}/group/${groupId}/user/${userId}`,
-
-  // Alerts
-  alert: (eventId) => `/event/${eventId}/alert`,
-  alertGet: (eventId, alertId) => `/event/${eventId}/alert/${alertId}`,
-
-  // Institution
-  institution: () => `/institution`,
-  institutionGet: (id) => `/institution/${id}`,
-  institutionUnconfirmed: () => `/institution/unconfirmed`,
-  institutionConfirm: (id) => `/institution/${id}/confirm`,
-  institutionUser: (institutionId, userId) => `/institution/${institutionId}/user/${userId}`,
-}
-
-
-==== ./frontend\src\api\event.js ====
-import api from './axios.js'
-import { ep } from './endpoints.js'
-
-// POST /event
-export const createEvent = (body) => api.post(ep.event(), body)
-
-// GET/PATCH/DEL /event/:eventId
-export const getEvent = (eventId) => api.get(ep.eventGet(eventId))
-export const updateEvent = (eventId, body) => api.patch(ep.eventGet(eventId), body)
-export const deleteEvent = (eventId) => api.delete(ep.eventGet(eventId))
-
-// GET /event/unconfirmed
-export const listUnconfirmedEvents = (params = {}) => api.get(ep.eventUnconfirmed(), { params })
-
-// POST /event/:eventId/confirm
-export const confirmEvent = (eventId) => api.post(ep.eventConfirm(eventId))
-
-
-==== ./frontend\src\api\group.js ====
-import api from './axios.js'
-import { ep } from './endpoints.js'
-
-// POST /event/:eventId/group
-export const createGroupForEvent = (eventId, body) => api.post(ep.eventGroup(eventId), body)
-
-// GET/PATCH/DEL /event/:eventId/group/:groupId
-export const getEventGroup = (eventId, groupId) => api.get(ep.eventGroupGet(eventId, groupId))
-export const updateEventGroup = (eventId, groupId, body) =>
-  api.patch(ep.eventGroupGet(eventId, groupId), body)
-export const deleteEventGroup = (eventId, groupId) => api.delete(ep.eventGroupGet(eventId, groupId))
-
-// POST /event/:eventId/group/:groupId/user  (body: { user_id })
-// GET/DEL /event/:eventId/group/:groupId/user/:userId
-export const addUserToEventGroup = (eventId, groupId, userId) =>
-  api.post(ep.eventGroupUser(eventId, groupId), { user_id: userId })
-
-export const getUserInEventGroup = (eventId, groupId, userId) =>
-  api.get(ep.eventGroupUserGet(eventId, groupId, userId))
-
-export const removeUserFromEventGroup = (eventId, groupId, userId) =>
-  api.delete(ep.eventGroupUserGet(eventId, groupId, userId))
-
-
-==== ./frontend\src\api\institution.js ====
-import api from './axios.js'
-import { ep } from './endpoints.js'
-
-// POST /institution
-export const createInstitution = (body) => api.post(ep.institution(), body)
-
-// GET/PATCH/DEL /institution/:id
-export const getInstitution = (id) => api.get(ep.institutionGet(id))
-export const updateInstitution = (id, body) => api.patch(ep.institutionGet(id), body)
-export const deleteInstitution = (id) => api.delete(ep.institutionGet(id))
-
-// GET /institution/unconfirmed
-export const listUnconfirmedInstitutions = (params = {}) =>
-  api.get(ep.institutionUnconfirmed(), { params })
-
-// POST /institution/:id/confirm
-export const confirmInstitution = (id) => api.post(ep.institutionConfirm(id))
-
-// POST/GET/PATCH/DEL /institution/:institutionId/user/:userId
-export const addUserToInstitution = (institutionId, userId, body = {}) =>
-  api.post(ep.institutionUser(institutionId, userId), body)
-
-export const getInstitutionUser = (institutionId, userId) =>
-  api.get(ep.institutionUser(institutionId, userId))
-
-export const updateInstitutionUser = (institutionId, userId, body) =>
-  api.patch(ep.institutionUser(institutionId, userId), body)
-
-export const removeUserFromInstitution = (institutionId, userId) =>
-  api.delete(ep.institutionUser(institutionId, userId))
-
-
-==== ./frontend\src\api\notification.js ====
-import api from './axios.js'
-import { ep } from './endpoints.js'
-
-// POST /user/:userId/notification
-export const createNotification = (userId, body) => api.post(ep.notification(userId), body)
-
-// GET/PATCH/DEL /user/:userId/notification/:id
-export const getNotification = (userId, id) => api.get(ep.notificationGet(userId, id))
-export const updateNotification = (userId, id, body) =>
-  api.patch(ep.notificationGet(userId, id), body)
-export const deleteNotification = (userId, id) => api.delete(ep.notificationGet(userId, id))
-
-
-==== ./frontend\src\api\opinion.js ====
-import api from './axios.js'
-import { ep } from './endpoints.js'
-
-// POST /user/:userId/opinion
-export const createOpinion = (userId, body) => api.post(ep.opinion(userId), body)
-
-// GET/PATCH/DEL /user/:userId/opinion/:opinionId
-export const getOpinion = (userId, opinionId) => api.get(ep.opinionGet(userId, opinionId))
-export const updateOpinion = (userId, opinionId, body) =>
-  api.patch(ep.opinionGet(userId, opinionId), body)
-export const deleteOpinion = (userId, opinionId) => api.delete(ep.opinionGet(userId, opinionId))
-
-
-==== ./frontend\src\api\task.js ====
-import api from './axios.js'
-import { ep } from './endpoints.js'
-
-// GET /group/:groupId/user/free
-export const listFreeUsersForGroup = (groupId, params = {}) =>
-  api.get(ep.groupUsersFree(groupId), { params })
-
-// POST /group/:groupId/task
-export const createTask = (groupId, body) => api.post(ep.task(groupId), body)
-
-// GET/PATCH/DEL /group/:groupId/task/:taskId
-export const getTask = (groupId, taskId) => api.get(ep.taskGet(groupId, taskId))
-export const updateTask = (groupId, taskId, body) => api.patch(ep.taskGet(groupId, taskId), body)
-export const deleteTask = (groupId, taskId) => api.delete(ep.taskGet(groupId, taskId))
-
-// POST /group/:groupId/task/:taskId/user   (body: { user_id })
-export const addUserToTask = (groupId, taskId, userId) =>
-  api.post(ep.taskUser(groupId, taskId), { user_id: userId })
-
-// GET/DEL /group/:groupId/task/:taskId/user/:userId
-export const getUserOnTask = (groupId, taskId, userId) =>
-  api.get(ep.taskUserGet(groupId, taskId, userId))
-export const removeUserFromTask = (groupId, taskId, userId) =>
-  api.delete(ep.taskUserGet(groupId, taskId, userId))
-
-
-==== ./frontend\src\api\user.js ====
-import api from './axios.js'
-import { ep } from './endpoints.js'
-
-// /user/me
-export const getMe = () => api.get(ep.me())
-
-// /user/:id
-export const getUser = (id) => api.get(ep.user(id))
-
-// GET/POST /user/:id/localization
-export const getUserLocalization = (id) => api.get(ep.userLocalization(id))
-export const setUserLocalization = (id, body) => api.post(ep.userLocalization(id), body)
-
-// GET /events/all/users/:id
-export const listEventsForUser = (userId, params = {}) =>
-  api.get(ep.eventsForUser(userId), { params })
-
-
-==== ./frontend\src\assets\main.scss ====
+==== ./frontend/src/assets/main.scss ====
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 * {
@@ -761,7 +348,7 @@ a:hover {
 }
 
 
-==== ./frontend\src\assets\variables.scss ====
+==== ./frontend/src/assets/variables.scss ====
 // BRAND (zostają tylko te dwa)
 $blue-color: #2f83c2;
 $red-color: #cc3960;
@@ -783,16 +370,1037 @@ $radius-lg: 12px;
 $shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
 
 
-==== ./frontend\src\components\browser\AdvertField.vue ====
+==== ./frontend/src/stores/auth.js ====
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+
+export const ROLE = {
+  VOLUNTEER: 'VOLUNTEER',
+  COORDINATOR: 'COORDINATOR',
+  ORG_ADMIN: 'ORG_ADMIN',
+  GOV_ADMIN: 'GOV_ADMIN',
+}
+
+export const ROLE_LABEL = {
+  [ROLE.VOLUNTEER]: 'Wolontariusz',
+  [ROLE.COORDINATOR]: 'Koordynator',
+  [ROLE.ORG_ADMIN]: 'Admin organizacji',
+  [ROLE.GOV_ADMIN]: 'Admin rządowy',
+}
+
+export const useAuthStore = defineStore('auth', () => {
+  const user = ref(null)
+  const rolesAvailable = ref([])
+  const currentRole = ref(null)
+
+  function setAuthFromBackend({ user: u, roles }) {
+    user.value = u || null
+    const r = Array.isArray(roles) ? roles : roles ? [roles] : []
+    rolesAvailable.value = r
+    currentRole.value = r[0] || null
+  }
+
+  function setRole(role) {
+    if (rolesAvailable.value.includes(role)) currentRole.value = role
+  }
+
+  const isGovAdmin = computed(() => currentRole.value === ROLE.GOV_ADMIN)
+  const isOrgAdmin = computed(() => currentRole.value === ROLE.ORG_ADMIN)
+  const isCoordinator = computed(() => currentRole.value === ROLE.COORDINATOR)
+  const isVolunteer = computed(() => currentRole.value === ROLE.VOLUNTEER)
+
+  return {
+    // state
+    user,
+    rolesAvailable,
+    currentRole,
+    // labels/enums
+    ROLE,
+    ROLE_LABEL,
+    // actions
+    setAuthFromBackend,
+    setRole,
+    // getters
+    isGovAdmin,
+    isOrgAdmin,
+    isCoordinator,
+    isVolunteer,
+  }
+})
 
 
-==== ./frontend\src\components\browser\MapField.vue ====
+==== ./frontend/src/mocks/chat.js ====
+// frontend/src/mocks/chat.js
+// Mock zgodny ze schematem:
+// { chat_id, event_id, participants[{user_id, role, display_name}], last_seen{...}, messages[{id,ts,sender_id,text,meta}] }
+
+const LS_KEY = 'mock_chats_v2'
+
+// Seed: przykładowe dwa wątki
+const seed = {
+  'evt-krk-002:u-1': {
+    chat_id: 'evt-krk-002:u-1',
+    event_id: 'evt-krk-002',
+    participants: [
+      { user_id: 'u-1', role: 'VOLUNTEER', display_name: 'Test User' },
+      { user_id: 'org-1', role: 'ORGANIZER', display_name: 'Organizator Kasia' },
+    ],
+    last_seen: { 'u-1': null, 'org-1': null },
+    messages: [
+      {
+        id: 'm-1',
+        ts: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
+        sender_id: 'u-1',
+        text: 'Cześć! Gdzie jutro odbieramy identyfikatory?',
+        meta: { delivered: true, read_at: null },
+      },
+      {
+        id: 'm-2',
+        ts: new Date(Date.now() - 1000 * 60 * 60 * 5 + 42000).toISOString(),
+        sender_id: 'org-1',
+        text: 'Hej, w namiocie przy wejściu A, od 8:30.',
+        meta: { delivered: true },
+      },
+      {
+        id: 'm-3',
+        ts: new Date(Date.now() - 1000 * 60 * 60 * 4 + 120000).toISOString(),
+        sender_id: 'u-1',
+        text: 'Dzięki!',
+        meta: { delivered: true },
+      },
+    ],
+  },
+  'evt-krk-001:u-1': {
+    chat_id: 'evt-krk-001:u-1',
+    event_id: 'evt-krk-001',
+    participants: [
+      { user_id: 'u-1', role: 'VOLUNTEER', display_name: 'Test User' },
+      { user_id: 'org-9', role: 'ORGANIZER', display_name: 'Organizator Marek' },
+    ],
+    last_seen: { 'u-1': null, 'org-9': null },
+    messages: [
+      {
+        id: 'm-1',
+        ts: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+        sender_id: 'org-9',
+        text: 'Przypominam o kamizelkach odblaskowych :)',
+        meta: { delivered: true },
+      },
+    ],
+  },
+}
+
+// --- helpers ---
+function load() {
+  try {
+    const raw = localStorage.getItem(LS_KEY)
+    return raw ? JSON.parse(raw) : { ...seed }
+  } catch {
+    return { ...seed }
+  }
+}
+function save(db) {
+  localStorage.setItem(LS_KEY, JSON.stringify(db))
+}
+function keyOf(eventId, userId) {
+  return `${eventId}:${userId}`
+}
+function nextMsgId(chat) {
+  const last = chat.messages[chat.messages.length - 1]
+  const n = last ? parseInt((last.id || 'm-0').split('-')[1], 10) + 1 : 1
+  return `m-${n}`
+}
+function ensureChat(db, eventId, userId) {
+  const key = keyOf(eventId, userId)
+  if (!db[key]) {
+    db[key] = {
+      chat_id: key,
+      event_id: eventId,
+      participants: [
+        { user_id: userId, role: 'VOLUNTEER', display_name: 'Ty' },
+        { user_id: `org-${eventId}`, role: 'ORGANIZER', display_name: 'Organizator' },
+      ],
+      last_seen: { [userId]: null, [`org-${eventId}`]: null },
+      messages: [],
+    }
+  }
+  return db[key]
+}
+function organizerId(chat) {
+  return chat.participants.find((p) => p.role === 'ORGANIZER')?.user_id
+}
+
+// --- API MOCK ---
+export function getChatMock(eventId, userId) {
+  const db = load()
+  const chat = ensureChat(db, eventId, userId)
+  save(db)
+  // deep copy
+  return JSON.parse(JSON.stringify(chat))
+}
+
+export function postMessageMock({ eventId, userId, text, as = 'ME' }) {
+  // as: 'ME' | 'ORGANIZER' (tylko na potrzeby dema)
+  const db = load()
+  const key = keyOf(eventId, userId)
+  const chat = ensureChat(db, eventId, userId)
+
+  const sender_id = as === 'ORGANIZER' ? organizerId(chat) : userId
+  const msg = {
+    id: nextMsgId(chat),
+    ts: new Date().toISOString(),
+    sender_id,
+    text: text || '',
+    meta: { delivered: true },
+  }
+  chat.messages.push(msg)
+  db[key] = chat
+  save(db)
+  return JSON.parse(JSON.stringify(msg))
+}
+
+// Symulacja auto-odpowiedzi organizatora
+export function autoReplyMock({ eventId, userId }) {
+  const variants = [
+    'Dziękuję za wiadomość, sprawdzę i dam znać.',
+    'Ok, zanotowane.',
+    'Możemy to potwierdzić jutro rano.',
+    'Brzmi dobrze!',
+    'Poproszę o numer telefonu do kontaktu w dniu wydarzenia.',
+  ]
+  const text = variants[Math.floor(Math.random() * variants.length)]
+  return postMessageMock({ eventId, userId, text, as: 'ORGANIZER' })
+}
 
 
-==== ./frontend\src\components\browser\ResultsBar.vue ====
+==== ./frontend/src/mocks/events.js ====
+// Prosty mock danych kalendarza, zgodny z naszymi typami.
+export function mockEventsForUser() {
+  // daty w ISO, kilka eventów przeszłych i przyszłych
+  const now = new Date()
+  const day = 24 * 60 * 60 * 1000
+
+  const iso = (d) => new Date(d).toISOString()
+
+  return [
+    {
+      id: 'evt-krk-001',
+      name: 'Bieg Charytatywny',
+      description: 'Wydarzenie biegowe w Parku Jordana.',
+      status: 'CONFIRMED',
+      institution_id: 'inst-1',
+      start_date: iso(now.getTime() + 3 * day),
+      end_date: iso(now.getTime() + 3 * day + 3 * 60 * 60 * 1000),
+      groups: [
+        {
+          id: 'grp-1',
+          name: 'Strefa Startu',
+          tasks: [
+            {
+              id: 'tsk-1',
+              name: 'Rejestracja uczestników',
+              start_date: iso(now.getTime() + 3 * day),
+              end_date: iso(now.getTime() + 3 * day + 2 * 60 * 60 * 1000),
+              users: [{ id: 'u-2' }, { id: 'u-3' }],
+            },
+            {
+              id: 'tsk-2',
+              name: 'Wydawanie numerów',
+              start_date: iso(now.getTime() + 3 * day),
+              end_date: iso(now.getTime() + 3 * day + 2 * 60 * 60 * 1000),
+              users: [{ id: 'u-4' }],
+            },
+          ],
+        },
+        {
+          id: 'grp-2',
+          name: 'Trasa',
+          tasks: [
+            {
+              id: 'tsk-3',
+              name: 'Nawadnianie 5km',
+              start_date: iso(now.getTime() + 3 * day + 60 * 60 * 1000),
+              end_date: iso(now.getTime() + 3 * day + 3 * 60 * 60 * 1000),
+              users: [{ id: 'u-5' }, { id: 'u-6' }],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'evt-krk-002',
+      name: 'Zbiórka Żywności',
+      description: 'Akcja w kilku sklepach na terenie miasta.',
+      status: 'CONFIRMED',
+      institution_id: 'inst-2',
+      start_date: iso(now.getTime() + 7 * day),
+      end_date: iso(now.getTime() + 7 * day + 8 * 60 * 60 * 1000),
+      groups: [
+        {
+          id: 'grp-3',
+          name: 'Sklep A',
+          tasks: [
+            {
+              id: 'tsk-4',
+              name: 'Zmiana poranna',
+              start_date: iso(now.getTime() + 7 * day),
+              end_date: iso(now.getTime() + 7 * day + 4 * 60 * 60 * 1000),
+              users: [{ id: 'u-1' }], // nasz test user
+            },
+            {
+              id: 'tsk-5',
+              name: 'Zmiana popołudniowa',
+              start_date: iso(now.getTime() + 7 * day + 4 * 60 * 60 * 1000),
+              end_date: iso(now.getTime() + 7 * day + 8 * 60 * 60 * 1000),
+              users: [{ id: 'u-7' }],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'evt-krk-000',
+      name: 'Porządkowanie Parku',
+      description: 'Akcja sprzątania po weekendzie.',
+      status: 'FINISHED',
+      institution_id: 'inst-3',
+      start_date: iso(now.getTime() - 5 * day),
+      end_date: iso(now.getTime() - 5 * day + 3 * 60 * 60 * 1000),
+      groups: [
+        {
+          id: 'grp-4',
+          name: 'Strefa wschodnia',
+          tasks: [
+            {
+              id: 'tsk-6',
+              name: 'Zbieranie odpadów',
+              start_date: iso(now.getTime() - 5 * day),
+              end_date: iso(now.getTime() - 5 * day + 3 * 60 * 60 * 1000),
+              users: [{ id: 'u-1' }, { id: 'u-8' }],
+            },
+          ],
+        },
+      ],
+    },
+  ]
+}
 
 
-==== ./frontend\src\components\dashboard\SettingsBar.vue ====
+==== ./frontend/src/mocks/certificates.js ====
+// Uproszczone mocki pod certyfikaty.
+// Zakładamy, że certyfikat można wygenerować dla zakończonych eventów,
+// w których dany user brał udział (jest na przynajmniej 1 tasku).
+
+const now = new Date()
+const day = 24 * 60 * 60 * 1000
+const iso = (d) => new Date(d).toISOString()
+
+export const mockUsers = [
+  { id: 'u-1', name: 'Test User' }, // nasz zalogowany
+  { id: 'u-2', name: 'Wolontariusz Kowalski' },
+  { id: 'u-3', name: 'Wolontariusz Anna' },
+  { id: 'u-4', name: 'Wolontariusz Bartek' },
+  { id: 'u-8', name: 'Wolontariusz Ola' },
+]
+
+export const mockEvents = [
+  {
+    id: 'evt-100',
+    name: 'Porządkowanie Parku',
+    description: 'Akcja sprzątania po weekendzie.',
+    status: 'FINISHED',
+    institution_id: 'inst-3',
+    start_date: iso(now.getTime() - 7 * day),
+    end_date: iso(now.getTime() - 7 * day + 3 * 60 * 60 * 1000),
+    groups: [
+      {
+        id: 'grp-a',
+        name: 'Strefa wschodnia',
+        tasks: [
+          {
+            id: 'tsk-a1',
+            name: 'Zbieranie odpadów',
+            start_date: iso(now.getTime() - 7 * day),
+            end_date: iso(now.getTime() - 7 * day + 3 * 60 * 60 * 1000),
+            users: [{ id: 'u-1' }, { id: 'u-8' }],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'evt-101',
+    name: 'Zbiórka Żywności',
+    description: 'Akcja w kilku sklepach.',
+    status: 'FINISHED',
+    institution_id: 'inst-2',
+    start_date: iso(now.getTime() - 3 * day),
+    end_date: iso(now.getTime() - 3 * day + 6 * 60 * 60 * 1000),
+    groups: [
+      {
+        id: 'grp-b',
+        name: 'Sklep A',
+        tasks: [
+          {
+            id: 'tsk-b1',
+            name: 'Zmiana poranna',
+            start_date: iso(now.getTime() - 3 * day),
+            end_date: iso(now.getTime() - 3 * day + 3 * 60 * 60 * 1000),
+            users: [{ id: 'u-3' }],
+          },
+          {
+            id: 'tsk-b2',
+            name: 'Zmiana popołudniowa',
+            start_date: iso(now.getTime() - 3 * day + 3 * 60 * 60 * 1000),
+            end_date: iso(now.getTime() - 3 * day + 6 * 60 * 60 * 1000),
+            users: [{ id: 'u-4' }],
+          },
+        ],
+      },
+    ],
+  },
+  // Do podglądu – event bieżący (nie generujemy z niego certyfikatów)
+  {
+    id: 'evt-102',
+    name: 'Bieg Charytatywny',
+    description: 'Park Jordana.',
+    status: 'CONFIRMED',
+    institution_id: 'inst-1',
+    start_date: iso(now.getTime() + 2 * day),
+    end_date: iso(now.getTime() + 2 * day + 4 * 60 * 60 * 1000),
+    groups: [
+      {
+        id: 'grp-c',
+        name: 'Strefa Startu',
+        tasks: [
+          {
+            id: 'tsk-c1',
+            name: 'Rejestracja',
+            start_date: iso(now.getTime() + 2 * day),
+            end_date: iso(now.getTime() + 2 * day + 2 * 60 * 60 * 1000),
+            users: [{ id: 'u-1' }, { id: 'u-3' }],
+          },
+        ],
+      },
+    ],
+  },
+]
+
+// Zwraca listę eventów FINISHED, w których brał udział userId
+export function mockEligibleEventsForUser(userId) {
+  const finished = mockEvents.filter((e) => new Date(e.end_date).getTime() < Date.now())
+  return finished.filter((e) =>
+    (e.groups || []).some((g) =>
+      (g.tasks || []).some((t) => (t.users || []).some((u) => u.id === userId)),
+    ),
+  )
+}
+
+// Koordynator – przykładowo ma „pod sobą” u-3 i u-4
+export function mockCoordinatorVolunteers(coordinatorId) {
+  // coordinatorId nieużywany w mocku – zawsze ci sami
+  return mockUsers.filter((u) => ['u-3', 'u-4'].includes(u.id))
+}
+
+// Organizator – zwracamy wolontariuszy, którzy uczestniczyli w jego eventach (tu: inst-2)
+export function mockOrganizerVolunteers(organizerId) {
+  // organizerId nieużywany w mocku – uproszczenie
+  const involvedIds = new Set()
+  mockEvents
+    .filter((e) => e.institution_id === 'inst-2' || e.institution_id === 'inst-3')
+    .forEach((e) =>
+      e.groups.forEach((g) =>
+        g.tasks.forEach((t) => t.users.forEach((u) => involvedIds.add(u.id))),
+      ),
+    )
+  return mockUsers.filter((u) => involvedIds.has(u.id))
+}
+
+// Admin – wszyscy
+export function mockAllVolunteers() {
+  return mockUsers
+}
+
+// Fallback: „generujemy” pseudo-PDF (właściwie zwykły blob z tekstem)
+export function mockCertificateBlob({ event, user }) {
+  const text = `
+CERTYFIKAT UCZESTNICTWA
+Uczestnik: ${user?.name || user?.id}
+Wydarzenie: ${event?.name} (${event?.id})
+Data: ${new Date().toLocaleString()}
+
+To jest przykładowy mock certyfikatu (PDF placeholder).
+`
+  return new Blob([text], { type: 'application/pdf' })
+}
+
+
+==== ./frontend/src/mocks/groups.js ====
+import { mockEventsForUser } from './events.js'
+
+// Zwraca spłaszczoną listę grup (z eventami) widocznych dla koordynatora.
+// W mocku używamy tych samych eventów, co w kalendarzu.
+export function mockGroupsForCoordinator(coordinatorId = 'u-1') {
+  // Używamy listy eventów z mocka; w realu – zapytanie do backendu.
+  const events = mockEventsForUser()
+  const list = []
+  for (const ev of events) {
+    for (const g of ev.groups || []) {
+      list.push({
+        eventId: ev.id,
+        eventName: ev.name,
+        groupId: g.id,
+        groupName: g.name,
+      })
+    }
+  }
+  return list
+}
+
+
+==== ./frontend/src/api/certificate.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// GET /event/:eventId/user/:userId
+export const getCertificate = (eventId, userId, params = {}) =>
+  api.get(ep.certificate(eventId, userId), { params })
+
+// Gdy backend zwraca PDF/plik – odbierz jako blob:
+export const getCertificateFile = (eventId, userId, params = {}) =>
+  api.get(ep.certificate(eventId, userId), { params, responseType: 'blob' })
+
+
+==== ./frontend/src/api/event.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// POST /event
+export const createEvent = (body) => api.post(ep.event(), body)
+
+// GET/PATCH/DEL /event/:eventId
+export const getEvent = (eventId) => api.get(ep.eventGet(eventId))
+export const updateEvent = (eventId, body) => api.patch(ep.eventGet(eventId), body)
+export const deleteEvent = (eventId) => api.delete(ep.eventGet(eventId))
+
+// GET /event/unconfirmed
+export const listUnconfirmedEvents = (params = {}) => api.get(ep.eventUnconfirmed(), { params })
+
+// POST /event/:eventId/confirm
+export const confirmEvent = (eventId) => api.post(ep.eventConfirm(eventId))
+
+
+==== ./frontend/src/api/opinion.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// POST /user/:userId/opinion
+export const createOpinion = (userId, body) => api.post(ep.opinion(userId), body)
+
+// GET/PATCH/DEL /user/:userId/opinion/:opinionId
+export const getOpinion = (userId, opinionId) => api.get(ep.opinionGet(userId, opinionId))
+export const updateOpinion = (userId, opinionId, body) =>
+  api.patch(ep.opinionGet(userId, opinionId), body)
+export const deleteOpinion = (userId, opinionId) => api.delete(ep.opinionGet(userId, opinionId))
+
+
+==== ./frontend/src/api/alert.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// POST /event/:eventId/alert
+export const createAlert = (eventId, body) => api.post(ep.alert(eventId), body)
+
+// GET/PATCH/DEL /event/:eventId/alert/:alertId
+export const getAlert = (eventId, alertId) => api.get(ep.alertGet(eventId, alertId))
+export const updateAlert = (eventId, alertId, body) =>
+  api.patch(ep.alertGet(eventId, alertId), body)
+export const deleteAlert = (eventId, alertId) => api.delete(ep.alertGet(eventId, alertId))
+
+
+==== ./frontend/src/api/chat.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// GET /event/:eventId/user/:userId/chat
+export const getChat = (eventId, userId, params = {}) =>
+  api.get(ep.chat(eventId, userId), { params })
+
+// POST /event/:eventId/user/:userId/chat
+export const sendChatMessage = (eventId, userId, body) => api.post(ep.chat(eventId, userId), body)
+
+
+==== ./frontend/src/api/group.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// POST /event/:eventId/group
+export const createGroupForEvent = (eventId, body) => api.post(ep.eventGroup(eventId), body)
+
+// GET/PATCH/DEL /event/:eventId/group/:groupId
+export const getEventGroup = (eventId, groupId) => api.get(ep.eventGroupGet(eventId, groupId))
+export const updateEventGroup = (eventId, groupId, body) =>
+  api.patch(ep.eventGroupGet(eventId, groupId), body)
+export const deleteEventGroup = (eventId, groupId) => api.delete(ep.eventGroupGet(eventId, groupId))
+
+// POST /event/:eventId/group/:groupId/user  (body: { user_id })
+// GET/DEL /event/:eventId/group/:groupId/user/:userId
+export const addUserToEventGroup = (eventId, groupId, userId) =>
+  api.post(ep.eventGroupUser(eventId, groupId), { user_id: userId })
+
+export const getUserInEventGroup = (eventId, groupId, userId) =>
+  api.get(ep.eventGroupUserGet(eventId, groupId, userId))
+
+export const removeUserFromEventGroup = (eventId, groupId, userId) =>
+  api.delete(ep.eventGroupUserGet(eventId, groupId, userId))
+
+
+==== ./frontend/src/api/user.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// /user/me
+export const getMe = () => api.get(ep.me())
+
+// /user/:id
+export const getUser = (id) => api.get(ep.user(id))
+
+// GET/POST /user/:id/localization
+export const getUserLocalization = (id) => api.get(ep.userLocalization(id))
+export const setUserLocalization = (id, body) => api.post(ep.userLocalization(id), body)
+
+// GET /events/all/users/:id
+export const listEventsForUser = (userId, params = {}) =>
+  api.get(ep.eventsForUser(userId), { params })
+
+
+==== ./frontend/src/api/notification.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// POST /user/:userId/notification
+export const createNotification = (userId, body) => api.post(ep.notification(userId), body)
+
+// GET/PATCH/DEL /user/:userId/notification/:id
+export const getNotification = (userId, id) => api.get(ep.notificationGet(userId, id))
+export const updateNotification = (userId, id, body) =>
+  api.patch(ep.notificationGet(userId, id), body)
+export const deleteNotification = (userId, id) => api.delete(ep.notificationGet(userId, id))
+
+
+==== ./frontend/src/api/task.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// GET /group/:groupId/user/free
+export const listFreeUsersForGroup = (groupId, params = {}) =>
+  api.get(ep.groupUsersFree(groupId), { params })
+
+// POST /group/:groupId/task
+export const createTask = (groupId, body) => api.post(ep.task(groupId), body)
+
+// GET/PATCH/DEL /group/:groupId/task/:taskId
+export const getTask = (groupId, taskId) => api.get(ep.taskGet(groupId, taskId))
+export const updateTask = (groupId, taskId, body) => api.patch(ep.taskGet(groupId, taskId), body)
+export const deleteTask = (groupId, taskId) => api.delete(ep.taskGet(groupId, taskId))
+
+// POST /group/:groupId/task/:taskId/user   (body: { user_id })
+export const addUserToTask = (groupId, taskId, userId) =>
+  api.post(ep.taskUser(groupId, taskId), { user_id: userId })
+
+// GET/DEL /group/:groupId/task/:taskId/user/:userId
+export const getUserOnTask = (groupId, taskId, userId) =>
+  api.get(ep.taskUserGet(groupId, taskId, userId))
+export const removeUserFromTask = (groupId, taskId, userId) =>
+  api.delete(ep.taskUserGet(groupId, taskId, userId))
+
+
+==== ./frontend/src/api/institution.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// POST /institution
+export const createInstitution = (body) => api.post(ep.institution(), body)
+
+// GET/PATCH/DEL /institution/:id
+export const getInstitution = (id) => api.get(ep.institutionGet(id))
+export const updateInstitution = (id, body) => api.patch(ep.institutionGet(id), body)
+export const deleteInstitution = (id) => api.delete(ep.institutionGet(id))
+
+// GET /institution/unconfirmed
+export const listUnconfirmedInstitutions = (params = {}) =>
+  api.get(ep.institutionUnconfirmed(), { params })
+
+// POST /institution/:id/confirm
+export const confirmInstitution = (id) => api.post(ep.institutionConfirm(id))
+
+// POST/GET/PATCH/DEL /institution/:institutionId/user/:userId
+export const addUserToInstitution = (institutionId, userId, body = {}) =>
+  api.post(ep.institutionUser(institutionId, userId), body)
+
+export const getInstitutionUser = (institutionId, userId) =>
+  api.get(ep.institutionUser(institutionId, userId))
+
+export const updateInstitutionUser = (institutionId, userId, body) =>
+  api.patch(ep.institutionUser(institutionId, userId), body)
+
+export const removeUserFromInstitution = (institutionId, userId) =>
+  api.delete(ep.institutionUser(institutionId, userId))
+
+
+==== ./frontend/src/api/axios.js ====
+import axios from 'axios'
+
+const baseURL = import.meta.env.VITE_API_URL || '/api'
+
+const api = axios.create({
+  baseURL,
+  timeout: 15000,
+  withCredentials: false, // TODO zmień na true jeśli backend ustawia cookies
+})
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers = config.headers || {}
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+api.interceptors.response.use(
+  (res) => res.data,
+  async (error) => {
+    const status = error?.response?.status
+    const message =
+      error?.response?.data?.message || error?.message || `${status || ''} request error`
+    return Promise.reject(new Error(message))
+  },
+)
+
+api.interceptors.response.use(
+  (res) => res.data,
+  (error) => {
+    const status = error?.response?.status
+    if (status === 401) {
+      localStorage.removeItem('token')
+    }
+    const message =
+      error?.response?.data?.message || error?.message || `${status || ''} request error`
+    return Promise.reject(new Error(message))
+  },
+)
+
+export default api
+
+
+==== ./frontend/src/api/endpoints.js ====
+export const ep = {
+  //User
+  me: () => '/user/me',
+  user: (id) => `/user/${id}`,
+  userLocalization: (id) => `/user/${id}/localization`,
+  eventsForUser: (id) => `/events/all/users/${id}`,
+
+  // Opinions
+  opinion: (userId) => `/user/${userId}/opinion`,
+  opinionGet: (userId, opinionId) => `/user/${userId}/opinion/${opinionId}`,
+
+  // Notifications
+  notification: (userId) => `/user/${userId}/notification`,
+  notificationGet: (userId, id) => `/user/${userId}/notification/${id}`,
+
+  // Tasks
+  task: (groupId) => `/group/${groupId}/task`,
+  taskGet: (groupId, taskId) => `/group/${groupId}/task/${taskId}`,
+  taskUser: (groupId, taskId) => `/group/${groupId}/task/${taskId}/user`,
+  taskUserGet: (groupId, taskId, userId) => `/group/${groupId}/task/${taskId}/user/${userId}`,
+  groupUsersFree: (groupId) => `/group/${groupId}/user/free`,
+
+  // Certificates / Chat
+  certificate: (eventId, userId) => `/event/${eventId}/user/${userId}`,
+  chat: (eventId, userId) => `/event/${eventId}/user/${userId}/chat`,
+
+  // Events
+  event: () => `/event`,
+  eventGet: (eventId) => `/event/${eventId}`,
+  eventUnconfirmed: () => `/event/unconfirmed`,
+  eventConfirm: (eventId) => `/event/${eventId}/confirm`,
+
+  // Groups
+  eventGroup: (eventId) => `/event/${eventId}/group`,
+  eventGroupGet: (eventId, groupId) => `/event/${eventId}/group/${groupId}`,
+  eventGroupUser: (eventId, groupId) => `/event/${eventId}/group/${groupId}/user`,
+  eventGroupUserGet: (eventId, groupId, userId) =>
+    `/event/${eventId}/group/${groupId}/user/${userId}`,
+
+  // Alerts
+  alert: (eventId) => `/event/${eventId}/alert`,
+  alertGet: (eventId, alertId) => `/event/${eventId}/alert/${alertId}`,
+
+  // Institution
+  institution: () => `/institution`,
+  institutionGet: (id) => `/institution/${id}`,
+  institutionUnconfirmed: () => `/institution/unconfirmed`,
+  institutionConfirm: (id) => `/institution/${id}/confirm`,
+  institutionUser: (institutionId, userId) => `/institution/${institutionId}/user/${userId}`,
+}
+
+
+==== ./frontend/src/components/structure/Navbar.vue ====
+<template>
+  <header class="navbar">
+    <div class="navbar__inner">
+      <router-link to="/" class="brand">
+        <img class="brand__logo" src="@/assets/logo.png" alt="Logo" />
+        <span class="brand__name">Wolontariat</span>
+      </router-link>
+
+      <nav class="nav">
+        <router-link to="/">Ogłoszenia</router-link>
+        <router-link to="/login">Logowanie</router-link>
+        <router-link to="/dashboard">Panel</router-link>
+      </nav>
+
+      <div class="role" v-if="auth.rolesAvailable.length">
+        <label v-if="auth.rolesAvailable.length > 1" class="role__switch">
+          Rola:
+          <select :value="auth.currentRole" @change="onChange" class="select">
+            <option v-for="r in auth.rolesAvailable" :key="r" :value="r">
+              {{ auth.ROLE_LABEL[r] || r }}
+            </option>
+          </select>
+        </label>
+        <span v-else class="badge">
+          {{ auth.ROLE_LABEL[auth.currentRole] || auth.currentRole }}
+        </span>
+      </div>
+    </div>
+  </header>
+</template>
+
+<script setup>
+import { useAuthStore } from '@/stores/auth.js'
+const auth = useAuthStore()
+function onChange(e) {
+  auth.setRole(e.target.value)
+}
+</script>
+
+<style scoped lang="scss">
+.navbar {
+  position: relative;
+  top: 0;
+  z-index: 50;
+  background: $surface;
+  border-bottom: 1px solid $border-color;
+}
+
+.navbar__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: $font-color;
+
+  &__logo {
+    height: 36px;
+    width: auto;
+    display: block;
+  }
+  &__name {
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+}
+
+.nav {
+  display: inline-flex;
+  gap: 0.25rem;
+
+  a {
+    padding: 0.45rem 0.7rem;
+    border-radius: 8px;
+    transition:
+      background-color 120ms ease,
+      color 120ms ease;
+    color: $font-color;
+
+    &:hover {
+      background: $surface-hover;
+    }
+    &.router-link-exact-active {
+      color: $blue-color;
+      background: $surface-hover;
+      font-weight: 600;
+    }
+  }
+}
+
+.role {
+  display: inline-flex;
+  align-items: center;
+}
+.role__switch {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.select {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  background: $surface;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  background: $surface-hover;
+  border: 1px solid $border-color;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+</style>
+
+
+==== ./frontend/src/components/structure/Footer.vue ====
+<template>
+  <footer class="footer">
+    <div class="footer__inner">
+      <!-- Brand -->
+      <router-link to="/" class="brand" aria-label="Przejdź do strony głównej">
+        <img class="brand__logo" src="@/assets/logo.png" alt="" />
+        <span class="brand__name">Wolontariat</span>
+      </router-link>
+
+      <!-- Nawigacja skrótowa -->
+      <nav class="links" aria-label="Szybkie linki">
+        <router-link to="/">Ogłoszenia</router-link>
+        <router-link to="/dashboard">Panel</router-link>
+        <router-link to="/login">Logowanie</router-link>
+      </nav>
+
+      <!-- Kontakt / info -->
+      <div class="meta">
+        <p class="meta__line">
+          Masz pytania? <a href="mailto:kontakt@wolontariat.pl">kontakt@wolontariat.pl</a>
+        </p>
+        <p class="meta__line">© {{ year }} Wolontariat — wszystkie prawa zastrzeżone</p>
+      </div>
+    </div>
+  </footer>
+</template>
+
+<script setup>
+const year = new Date().getFullYear()
+</script>
+
+<style scoped lang="scss">
+.footer {
+  margin-top: 2rem;
+  background: $surface;
+  border-top: 1px solid $border-color;
+  color: $font-color;
+}
+
+.footer__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem;
+
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: inherit;
+
+  &__logo {
+    height: 36px;
+    width: auto;
+    display: block;
+  }
+  &__name {
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+}
+
+.links {
+  display: inline-flex;
+  gap: 0.75rem;
+
+  a {
+    padding: 0.3rem 0.55rem;
+    border-radius: $radius-sm;
+    transition:
+      background-color 120ms ease,
+      color 120ms ease;
+    color: $muted-color;
+
+    &:hover {
+      color: $blue-color;
+      background: $surface-hover;
+    }
+    &.router-link-exact-active {
+      color: $blue-color;
+      font-weight: 600;
+    }
+  }
+
+  @media (max-width: 900px) {
+    justify-content: center;
+  }
+}
+
+.meta {
+  text-align: right;
+
+  .meta__line {
+    margin: 0.1rem 0;
+    color: $muted-color;
+    font-size: 0.9rem;
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+
+      &:hover {
+        color: $red-color;
+      }
+    }
+  }
+
+  @media (max-width: 900px) {
+    text-align: center;
+  }
+}
+</style>
+
+
+==== ./frontend/src/components/dashboard/SettingsBar.vue ====
 <template>
   <nav class="settings">
     <RouterLink class="item" to="/dashboard/panel">Panel główny</RouterLink>
@@ -901,7 +1509,23 @@ const auth = useAuthStore()
 </style>
 
 
-==== ./frontend\src\components\dashboard\Categories\AllCalendar.vue ====
+==== ./frontend/src/components/dashboard/Categories/VolNotifSettings.vue ====
+<template>
+    Tutaj wolontariusz decyduje, jakie powiadomienia chce otrzymywać.</br>
+</template>
+
+
+==== ./frontend/src/components/dashboard/Categories/OrgAdvertPublication.vue ====
+<template>
+    Tutaj organizator dodaje i edytuje ogłoszenia.</br>
+    Klika dodaj lub wybiera ogłoszenie do edycji.</br>
+    Wtedy po prostu uzupełnia pola i zapisuje.</br>
+    Do tego, tworzy drzewo podeventów, przypisuje</br>
+    im adminów itp
+</template>
+
+
+==== ./frontend/src/components/dashboard/Categories/AllCalendar.vue ====
 <template>
   <div class="calendar">
     <header class="calendar__head">
@@ -1175,7 +1799,276 @@ function onRemoveUser(ev, grp, t) {
 </style>
 
 
-==== ./frontend\src\components\dashboard\Categories\AllCertificates.vue ====
+==== ./frontend/src/components/dashboard/Categories/AllDashboard.vue ====
+<template>Tutaj wyświetli się podgląd ważnych rzeczy. Czym są ważne rzeczy - zobaczymy</template>
+
+
+==== ./frontend/src/components/dashboard/Categories/AllUserData.vue ====
+<template>
+  <div class="new-vol">
+    <header class="head">
+      <h2>Zgłoszenie wolontariusza</h2>
+      <p class="muted">Koordynator: dodaj dane kandydata i przypisz go od razu do grupy.</p>
+    </header>
+
+    <form class="card grid-gap" @submit.prevent="onSubmit">
+      <div class="row">
+        <label class="lbl" for="firstName">Imię</label>
+        <input id="firstName" v-model.trim="form.firstName" class="input" required />
+      </div>
+
+      <div class="row">
+        <label class="lbl" for="lastName">Nazwisko</label>
+        <input id="lastName" v-model.trim="form.lastName" class="input" required />
+      </div>
+
+      <div class="row">
+        <label class="lbl" for="pesel">PESEL</label>
+        <input
+          id="pesel"
+          v-model.trim="form.pesel"
+          class="input"
+          maxlength="11"
+          inputmode="numeric"
+          placeholder="11 cyfr"
+          required
+        />
+        <small class="muted" v-if="form.pesel && !isPeselValid">Nieprawidłowy PESEL.</small>
+      </div>
+
+      <div class="row">
+        <label class="lbl" for="consent">Zgoda rodzica (skan)</label>
+        <input id="consent" type="file" class="input" accept=".pdf,image/*" @change="onFile" />
+        <small class="muted">PDF lub obraz (jpg/png). Opcjonalne, jeśli pełnoletni.</small>
+        <div v-if="fileName" class="fileinfo">
+          Wybrano: <strong>{{ fileName }}</strong>
+        </div>
+      </div>
+
+      <div class="row">
+        <label class="lbl" for="group">Przypisz do grupy</label>
+        <select id="group" class="select" v-model="selectedGroupKey" required>
+          <option disabled value="">— wybierz grupę —</option>
+          <option v-for="g in groups" :key="keyOf(g)" :value="keyOf(g)">
+            {{ g.eventName }} → {{ g.groupName }}
+          </option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn--primary" :disabled="submitting || !canSubmit">
+          {{ submitting ? 'Zgłaszanie…' : 'Zgłoś wolontariusza' }}
+        </button>
+        <span v-if="error" class="err">{{ error }}</span>
+        <span v-if="ok" class="ok">Zgłoszono (mock). W podglądzie poniżej masz szczegóły.</span>
+      </div>
+    </form>
+
+    <section class="preview card" v-if="lastPreview">
+      <h3>Podsumowanie zgłoszenia (mock)</h3>
+      <ul class="kv">
+        <li>
+          <span>Imię i nazwisko:</span><strong>{{ lastPreview.fullName }}</strong>
+        </li>
+        <li>
+          <span>PESEL:</span><strong>{{ lastPreview.pesel }}</strong>
+        </li>
+        <li>
+          <span>Grupa:</span>
+          <strong>{{ lastPreview.group.groupName }}</strong>
+          <small class="muted">({{ lastPreview.group.eventName }})</small>
+        </li>
+        <li>
+          <span>Plik zgody:</span><strong>{{ lastPreview.fileName || '—' }}</strong>
+        </li>
+        <li>
+          <span>Nadany ID (mock):</span><strong>{{ lastPreview.userId }}</strong>
+        </li>
+      </ul>
+    </section>
+  </div>
+</template>
+
+<script setup>
+import { computed, onMounted, ref } from 'vue'
+import { useAuthStore } from '@/stores/auth.js'
+import { mockGroupsForCoordinator } from '@/mocks/groups.js'
+// TODO: import { addUserToEventGroup } from '@/api/event.js'
+
+const auth = useAuthStore()
+
+const form = ref({
+  firstName: '',
+  lastName: '',
+  pesel: '',
+})
+const file = ref(null)
+const fileName = computed(() => file.value?.name || '')
+function onFile(e) {
+  const f = e.target.files?.[0]
+  file.value = f || null
+}
+
+// --- grupy (mock) ---
+const groups = ref([])
+onMounted(() => {
+  groups.value = mockGroupsForCoordinator(auth.user?.id)
+})
+const keyOf = (g) => `${g.eventId}|${g.groupId}`
+const selectedGroupKey = ref('')
+
+const isPeselValid = true
+
+// --- submit ---
+const submitting = ref(false)
+const error = ref('')
+const ok = ref(false)
+const lastPreview = ref(null)
+
+const canSubmit = computed(() => {
+  return form.value.firstName.trim() && form.value.lastName.trim() && selectedGroupKey.value
+})
+
+async function onSubmit() {
+  if (!canSubmit.value) return
+  submitting.value = true
+  error.value = ''
+  ok.value = false
+
+  try {
+    // 1) (TODO backend) Utworzenie użytkownika:
+    //    POST /user  -> { id }    (brak w spec – w mocku generujemy lokalne ID)
+    const userId = `mock-${Date.now().toString(36)}`
+
+    // 2) (TODO backend) Upload zgody rodzica:
+    //    np. POST /user/:userId/consent  multipart/form-data
+    //    W mocku tylko „udajemy” sukces.
+
+    // 3) Przypisanie do grupy:
+    const [eventId, groupId] = selectedGroupKey.value.split('|')
+
+    // Gdy backend gotowy:
+    // await addUserToEventGroup(eventId, groupId, userId)
+
+    const grp = groups.value.find((g) => g.eventId === eventId && g.groupId === groupId)
+    lastPreview.value = {
+      userId,
+      fullName: `${form.value.firstName} ${form.value.lastName}`,
+      pesel: form.value.pesel,
+      fileName: fileName.value,
+      group: grp,
+    }
+    ok.value = true
+
+    form.value.firstName = ''
+    form.value.lastName = ''
+    form.value.pesel = ''
+    file.value = null
+  } catch (e) {
+    error.value = e?.message || 'Coś poszło nie tak.'
+  } finally {
+    submitting.value = false
+  }
+}
+</script>
+
+<style scoped lang="scss">
+.head {
+  margin-bottom: 0.75rem;
+  .muted {
+    color: $muted-color;
+  }
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 0.75rem;
+  align-items: center;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lbl {
+  font-weight: 600;
+}
+
+.fileinfo {
+  font-size: 0.9rem;
+  color: $muted-color;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .err {
+    color: $red-color;
+  }
+  .ok {
+    color: $blue-color;
+  }
+}
+
+.preview {
+  margin-top: 1rem;
+
+  h3 {
+    margin: 0 0 0.5rem 0;
+  }
+
+  .kv {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 0.5rem;
+      padding: 0.35rem 0;
+
+      span {
+        color: $muted-color;
+      }
+
+      @media (max-width: 720px) {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}
+</style>
+
+
+==== ./frontend/src/components/dashboard/Categories/OrgAlertSettings.vue ====
+<template>
+    Tutaj organizator zarządza alertami.</br>
+    damy mu kilka rodzajów alertów
+</template>
+
+
+==== ./frontend/src/components/dashboard/Categories/OrgOpinions.vue ====
+<template>
+    Tutaj organizator zarządza opiniami dla wolontariuszy</br>
+    na wszystkich zakończonych wydarzeniach.
+</template>
+
+
+==== ./frontend/src/components/dashboard/Categories/AllReports.vue ====
+<template>printuje dashboard, potem ogarniemy</template>
+
+
+==== ./frontend/src/components/dashboard/Categories/SudoOrgVerification.vue ====
+<template>
+    Kiedy ktoś chce założyć organizację, admin ją zatwierdza.</br>
+</template>
+
+
+==== ./frontend/src/components/dashboard/Categories/AllCertificates.vue ====
 <template>
   <div class="certs">
     <header class="certs__head">
@@ -1443,180 +2336,235 @@ function triggerDownload(blob, filename) {
 </style>
 
 
-==== ./frontend\src\components\dashboard\Categories\AllDashboard.vue ====
-<template>Tutaj wyświetli się podgląd ważnych rzeczy. Czym są ważne rzeczy - zobaczymy</template>
-
-
-==== ./frontend\src\components\dashboard\Categories\AllReports.vue ====
-<template>printuje dashboard, potem ogarniemy</template>
-
-
-==== ./frontend\src\components\dashboard\Categories\AllUserData.vue ====
+==== ./frontend/src/components/dashboard/Categories/OrgApplicationManagement.vue ====
 <template>
-  <div class="new-vol">
+    Tutaj organizator zobaczy wolontariuszy,</br>
+    którzy się zgłosili (select eventu). Tutaj może ich usunąć</br>
+    lub przypisać im zadanie.</br>
+    Może też kliknąć na nim, żeby przeczytać opinie.
+</template>
+
+
+==== ./frontend/src/components/dashboard/Categories/CoordContact.vue ====
+<template>
+  <div class="chat-page">
     <header class="head">
-      <h2>Zgłoszenie wolontariusza</h2>
-      <p class="muted">Koordynator: dodaj dane kandydata i przypisz go od razu do grupy.</p>
+      <h2>Kontakt z organizatorem</h2>
+      <p class="muted">
+        Wybierz wydarzenie i rozmawiaj bezpośrednio z organizatorem. (Widoczne dla wolontariusza,
+        koordynatora i admina — czat dotyczy wybranego eventu).
+      </p>
     </header>
 
-    <form class="card grid-gap" @submit.prevent="onSubmit">
-      <div class="row">
-        <label class="lbl" for="firstName">Imię</label>
-        <input id="firstName" v-model.trim="form.firstName" class="input" required />
-      </div>
+    <div class="card picker">
+      <label for="eventSel" class="lbl">Wydarzenie</label>
+      <select id="eventSel" class="select" v-model="selectedEventId" @change="loadChat">
+        <option disabled value="">— wybierz wydarzenie —</option>
+        <option v-for="e in eventOptions" :key="e.id" :value="e.id">
+          {{ e.name }}
+        </option>
+      </select>
 
-      <div class="row">
-        <label class="lbl" for="lastName">Nazwisko</label>
-        <input id="lastName" v-model.trim="form.lastName" class="input" required />
-      </div>
-
-      <div class="row">
-        <label class="lbl" for="pesel">PESEL</label>
-        <input
-          id="pesel"
-          v-model.trim="form.pesel"
-          class="input"
-          maxlength="11"
-          inputmode="numeric"
-          placeholder="11 cyfr"
-          required
-        />
-        <small class="muted" v-if="form.pesel && !isPeselValid">Nieprawidłowy PESEL.</small>
-      </div>
-
-      <div class="row">
-        <label class="lbl" for="consent">Zgoda rodzica (skan)</label>
-        <input id="consent" type="file" class="input" accept=".pdf,image/*" @change="onFile" />
-        <small class="muted">PDF lub obraz (jpg/png). Opcjonalne, jeśli pełnoletni.</small>
-        <div v-if="fileName" class="fileinfo">
-          Wybrano: <strong>{{ fileName }}</strong>
-        </div>
-      </div>
-
-      <div class="row">
-        <label class="lbl" for="group">Przypisz do grupy</label>
-        <select id="group" class="select" v-model="selectedGroupKey" required>
-          <option disabled value="">— wybierz grupę —</option>
-          <option v-for="g in groups" :key="keyOf(g)" :value="keyOf(g)">
-            {{ g.eventName }} → {{ g.groupName }}
-          </option>
+      <!-- DEMO: przełącznik "piszę jako" żeby pokazać obie strony w jednym UI -->
+      <label class="aswho">
+        Piszę jako:
+        <select class="select aswho__sel" v-model="writeAs">
+          <option value="ME">Ja ({{ meName }})</option>
+          <option value="ORGANIZER">Organizator (demo)</option>
         </select>
+      </label>
+
+      <button class="btn" :disabled="!selectedEventId" @click="seedAutoReply">
+        Symuluj odpowiedź organizatora
+      </button>
+    </div>
+
+    <!-- Wątek -->
+    <section class="card thread" v-if="selectedEventId">
+      <div class="thread__inner" ref="scrollBox">
+        <template v-if="chatDoc.messages?.length">
+          <div
+            v-for="m in chatDoc.messages"
+            :key="m.id"
+            class="msg"
+            :class="{
+              'msg--me': m.sender_id === meId,
+              'msg--org': m.sender_id === organizerId,
+            }"
+          >
+            <div class="msg__meta">
+              <span class="who">{{ senderDisplay(m.sender_id) }}</span>
+              <span class="ts">{{ fmtTime(m.ts) }}</span>
+            </div>
+            <div class="msg__bubble">{{ m.text }}</div>
+          </div>
+        </template>
+        <p v-else class="muted">Brak wiadomości w tym wątku. Napisz pierwszą!</p>
       </div>
 
-      <div class="actions">
-        <button class="btn btn--primary" :disabled="submitting || !canSubmit">
-          {{ submitting ? 'Zgłaszanie…' : 'Zgłoś wolontariusza' }}
-        </button>
-        <span v-if="error" class="err">{{ error }}</span>
-        <span v-if="ok" class="ok">Zgłoszono (mock). W podglądzie poniżej masz szczegóły.</span>
-      </div>
-    </form>
-
-    <section class="preview card" v-if="lastPreview">
-      <h3>Podsumowanie zgłoszenia (mock)</h3>
-      <ul class="kv">
-        <li>
-          <span>Imię i nazwisko:</span><strong>{{ lastPreview.fullName }}</strong>
-        </li>
-        <li>
-          <span>PESEL:</span><strong>{{ lastPreview.pesel }}</strong>
-        </li>
-        <li>
-          <span>Grupa:</span>
-          <strong>{{ lastPreview.group.groupName }}</strong>
-          <small class="muted">({{ lastPreview.group.eventName }})</small>
-        </li>
-        <li>
-          <span>Plik zgody:</span><strong>{{ lastPreview.fileName || '—' }}</strong>
-        </li>
-        <li>
-          <span>Nadany ID (mock):</span><strong>{{ lastPreview.userId }}</strong>
-        </li>
-      </ul>
+      <!-- Wysyłanie -->
+      <form class="composer" @submit.prevent="send">
+        <input
+          class="input composer__input"
+          v-model="draft"
+          placeholder="Napisz wiadomość…"
+          :disabled="sending"
+        />
+        <button class="btn btn--primary" :disabled="sending || !draft.trim()">Wyślij</button>
+      </form>
+      <small v-if="error" class="err">{{ error }}</small>
     </section>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref, computed, watch, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth.js'
-import { mockGroupsForCoordinator } from '@/mocks/groups.js'
-// TODO: import { addUserToEventGroup } from '@/api/event.js'
+import { listEventsForUser } from '@/api/user.js'
+import { getChat, sendChatMessage } from '@/api/chat.js'
+import { mockEventsForUser } from '@/mocks/events.js'
+import { getChatMock, postMessageMock, autoReplyMock } from '@/mocks/chat.js'
 
 const auth = useAuthStore()
+const meId = computed(() => auth.user?.id || 'u-1')
+const meName = computed(() => auth.user?.name || 'Ja')
 
-const form = ref({
-  firstName: '',
-  lastName: '',
-  pesel: '',
+// 1) Wybór eventu
+const eventOptions = ref([])
+const selectedEventId = ref('')
+const writeAs = ref('ME') // 'ME' | 'ORGANIZER' (demo)
+
+onMounted(async () => {
+  try {
+    const resp = await listEventsForUser(meId.value)
+    const events = Array.isArray(resp) ? resp : resp?.events
+    if (!events) throw new Error('no events')
+    eventOptions.value = events
+    selectedEventId.value = events[0]?.id || ''
+  } catch {
+    // mock fallback
+    eventOptions.value = mockEventsForUser()
+    selectedEventId.value = eventOptions.value[0]?.id || ''
+  }
+  if (selectedEventId.value) await loadChat()
 })
-const file = ref(null)
-const fileName = computed(() => file.value?.name || '')
-function onFile(e) {
-  const f = e.target.files?.[0]
-  file.value = f || null
+
+watch(selectedEventId, async () => {
+  if (selectedEventId.value) await loadChat()
+})
+
+const chatDoc = ref({
+  chat_id: '',
+  event_id: '',
+  participants: [],
+  last_seen: {},
+  messages: [],
+})
+
+const participantsById = computed(() => {
+  const map = {}
+  for (const p of chatDoc.value.participants || []) map[p.user_id] = p
+  return map
+})
+const organizerId = computed(() => {
+  return (chatDoc.value.participants || []).find((p) => p.role === 'ORGANIZER')?.user_id
+})
+
+const sending = ref(false)
+const error = ref('')
+const scrollBox = ref(null)
+const draft = ref('')
+
+async function loadChat() {
+  error.value = ''
+  try {
+    // real API: zwraca cały dokument
+    const data = await getChat(selectedEventId.value, meId.value)
+    chatDoc.value = {
+      chat_id: data.chat_id,
+      event_id: data.event_id,
+      participants: data.participants || [],
+      last_seen: data.last_seen || {},
+      messages: (data.messages || []).slice().sort((a, b) => new Date(a.ts) - new Date(b.ts)),
+    }
+  } catch {
+    // mock
+    const m = getChatMock(selectedEventId.value, meId.value)
+    chatDoc.value = {
+      chat_id: m.chat_id,
+      event_id: m.event_id,
+      participants: m.participants || [],
+      last_seen: m.last_seen || {},
+      messages: (m.messages || []).slice().sort((a, b) => new Date(a.ts) - new Date(b.ts)),
+    }
+  }
+  await nextTick()
+  scrollToBottom()
 }
 
-// --- grupy (mock) ---
-const groups = ref([])
-onMounted(() => {
-  groups.value = mockGroupsForCoordinator(auth.user?.id)
-})
-const keyOf = (g) => `${g.eventId}|${g.groupId}`
-const selectedGroupKey = ref('')
+function scrollToBottom() {
+  const el = scrollBox.value
+  if (!el) return
+  el.scrollTop = el.scrollHeight
+}
 
-const isPeselValid = true
+function fmtTime(ts) {
+  const d = new Date(ts)
+  return d.toLocaleString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+  })
+}
 
-// --- submit ---
-const submitting = ref(false)
-const error = ref('')
-const ok = ref(false)
-const lastPreview = ref(null)
+function senderDisplay(uid) {
+  if (uid === meId.value) return 'Ty'
+  return participantsById.value[uid]?.display_name || uid
+}
 
-const canSubmit = computed(() => {
-  return form.value.firstName.trim() && form.value.lastName.trim() && selectedGroupKey.value
-})
-
-async function onSubmit() {
-  if (!canSubmit.value) return
-  submitting.value = true
+async function send() {
+  if (!draft.value.trim() || !selectedEventId.value) return
+  sending.value = true
   error.value = ''
-  ok.value = false
+  const text = draft.value
+  draft.value = ''
+
+  const optimistic = {
+    id: `tmp-${Date.now()}`,
+    ts: new Date().toISOString(),
+    sender_id: writeAs.value === 'ORGANIZER' ? organizerId.value || 'org-demo' : meId.value,
+    text,
+    meta: { delivered: true },
+  }
+  chatDoc.value.messages.push(optimistic)
+  await nextTick()
+  scrollToBottom()
 
   try {
-    // 1) (TODO backend) Utworzenie użytkownika:
-    //    POST /user  -> { id }    (brak w spec – w mocku generujemy lokalne ID)
-    const userId = `mock-${Date.now().toString(36)}`
-
-    // 2) (TODO backend) Upload zgody rodzica:
-    //    np. POST /user/:userId/consent  multipart/form-data
-    //    W mocku tylko „udajemy” sukces.
-
-    // 3) Przypisanie do grupy:
-    const [eventId, groupId] = selectedGroupKey.value.split('|')
-
-    // Gdy backend gotowy:
-    // await addUserToEventGroup(eventId, groupId, userId)
-
-    const grp = groups.value.find((g) => g.eventId === eventId && g.groupId === groupId)
-    lastPreview.value = {
-      userId,
-      fullName: `${form.value.firstName} ${form.value.lastName}`,
-      pesel: form.value.pesel,
-      fileName: fileName.value,
-      group: grp,
-    }
-    ok.value = true
-
-    form.value.firstName = ''
-    form.value.lastName = ''
-    form.value.pesel = ''
-    file.value = null
-  } catch (e) {
-    error.value = e?.message || 'Coś poszło nie tak.'
+    // real API: wysyłamy jako "ja" (backend weźmie nadawcę z tokena)
+    await sendChatMessage(selectedEventId.value, meId.value, { text })
+  } catch {
+    // fallback mock (tu można 'udawać' obie strony dla dema)
+    const saved = postMessageMock({
+      eventId: selectedEventId.value,
+      userId: meId.value,
+      text,
+      as: writeAs.value,
+    })
+    const i = chatDoc.value.messages.findIndex((m) => m.id === optimistic.id)
+    if (i !== -1) chatDoc.value.messages[i] = saved
   } finally {
-    submitting.value = false
+    sending.value = false
+    await nextTick()
+    scrollToBottom()
   }
+}
+
+// DEMO: szybka odpowiedź organizatora
+async function seedAutoReply() {
+  autoReplyMock({ eventId: selectedEventId.value, userId: meId.value })
+  await loadChat()
 }
 </script>
 
@@ -1628,13 +2576,13 @@ async function onSubmit() {
   }
 }
 
-.row {
+.picker {
   display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 0.75rem;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.5rem;
   align-items: center;
 
-  @media (max-width: 720px) {
+  @media (max-width: 840px) {
     grid-template-columns: 1fr;
   }
 }
@@ -1643,833 +2591,97 @@ async function onSubmit() {
   font-weight: 600;
 }
 
-.fileinfo {
-  font-size: 0.9rem;
-  color: $muted-color;
-}
-
-.actions {
-  display: flex;
+.aswho {
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-
-  .err {
-    color: $red-color;
-  }
-  .ok {
-    color: $blue-color;
+  gap: 0.5rem;
+  .aswho__sel {
+    min-width: 180px;
   }
 }
 
-.preview {
+.thread {
   margin-top: 1rem;
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  gap: 0.5rem;
+  min-height: 50vh;
+}
 
-  h3 {
-    margin: 0 0 0.5rem 0;
-  }
+.thread__inner {
+  max-height: 60vh;
+  overflow-y: auto;
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  padding: 0.75rem;
+  background: $surface;
+}
 
-  .kv {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+.msg {
+  margin: 0.4rem 0;
+  max-width: 80%;
+}
+.msg--me {
+  margin-left: auto;
+}
+.msg--org {
+  margin-right: auto;
+}
 
-    li {
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      gap: 0.5rem;
-      padding: 0.35rem 0;
+.msg__meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  font-size: 0.8rem;
+  color: $muted-color;
+  margin: 0 0 0.15rem 0;
+}
 
-      span {
-        color: $muted-color;
-      }
+.msg__bubble {
+  padding: 0.55rem 0.7rem;
+  border-radius: $radius-md;
+  border: 1px solid $border-color;
+  background: $surface-hover;
+}
+.msg--me .msg__bubble {
+  background: rgba($blue-color, 0.08);
+  border-color: rgba($blue-color, 0.35);
+}
+.msg--org .msg__bubble {
+  background: #fff;
+}
 
-      @media (max-width: 720px) {
-        grid-template-columns: 1fr;
-      }
-    }
-  }
+.composer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+.composer__input {
+  width: 100%;
+}
+
+.err {
+  color: $red-color;
 }
 </style>
 
 
-==== ./frontend\src\components\dashboard\Categories\CoordContact.vue ====
-<template>
-    Tutaj użytkownik ma czat z organizatorem</br>
-    Wybiera event, o którym chce rozmawiać</br>
-    Wtedy otworzy się czat - trzeba go jakoś stworzyć
-</template>
-
-
-==== ./frontend\src\components\dashboard\Categories\OrgAdvertPublication.vue ====
-<template>
-    Tutaj organizator dodaje i edytuje ogłoszenia.</br>
-    Klika dodaj lub wybiera ogłoszenie do edycji.</br>
-    Wtedy po prostu uzupełnia pola i zapisuje.</br>
-    Do tego, tworzy drzewo podeventów, przypisuje</br>
-    im adminów itp
-</template>
-
-
-==== ./frontend\src\components\dashboard\Categories\OrgAlertSettings.vue ====
-<template>
-    Tutaj organizator zarządza alertami.</br>
-    damy mu kilka rodzajów alertów
-</template>
-
-
-==== ./frontend\src\components\dashboard\Categories\OrgApplicationManagement.vue ====
-<template>
-    Tutaj organizator zobaczy wolontariuszy,</br>
-    którzy się zgłosili (select eventu). Tutaj może ich usunąć</br>
-    lub przypisać im zadanie.</br>
-    Może też kliknąć na nim, żeby przeczytać opinie.
-</template>
-
-
-==== ./frontend\src\components\dashboard\Categories\OrgOpinions.vue ====
-<template>
-    Tutaj organizator zarządza opiniami dla wolontariuszy</br>
-    na wszystkich zakończonych wydarzeniach.
-</template>
-
-
-==== ./frontend\src\components\dashboard\Categories\SudoEventVerification.vue ====
+==== ./frontend/src/components/dashboard/Categories/SudoEventVerification.vue ====
 <template>
     Tutaj admin zatwierdza wydarzenia</br>
 </template>
 
 
-==== ./frontend\src\components\dashboard\Categories\SudoOrgVerification.vue ====
-<template>
-    Kiedy ktoś chce założyć organizację, admin ją zatwierdza.</br>
-</template>
+==== ./frontend/src/components/browser/AdvertField.vue ====
 
 
-==== ./frontend\src\components\dashboard\Categories\VolNotifSettings.vue ====
-<template>
-    Tutaj wolontariusz decyduje, jakie powiadomienia chce otrzymywać.</br>
-</template>
+==== ./frontend/src/components/browser/ResultsBar.vue ====
 
 
-==== ./frontend\src\components\structure\Footer.vue ====
-<template>
-  <footer class="footer">
-    <div class="footer__inner">
-      <!-- Brand -->
-      <router-link to="/" class="brand" aria-label="Przejdź do strony głównej">
-        <img class="brand__logo" src="@/assets/logo.png" alt="" />
-        <span class="brand__name">Wolontariat</span>
-      </router-link>
+==== ./frontend/src/components/browser/MapField.vue ====
 
-      <!-- Nawigacja skrótowa -->
-      <nav class="links" aria-label="Szybkie linki">
-        <router-link to="/">Ogłoszenia</router-link>
-        <router-link to="/dashboard">Panel</router-link>
-        <router-link to="/login">Logowanie</router-link>
-      </nav>
 
-      <!-- Kontakt / info -->
-      <div class="meta">
-        <p class="meta__line">
-          Masz pytania? <a href="mailto:kontakt@wolontariat.pl">kontakt@wolontariat.pl</a>
-        </p>
-        <p class="meta__line">© {{ year }} Wolontariat — wszystkie prawa zastrzeżone</p>
-      </div>
-    </div>
-  </footer>
-</template>
-
-<script setup>
-const year = new Date().getFullYear()
-</script>
-
-<style scoped lang="scss">
-.footer {
-  margin-top: 2rem;
-  background: $surface;
-  border-top: 1px solid $border-color;
-  color: $font-color;
-}
-
-.footer__inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1.25rem 1rem;
-
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 1rem;
-
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-}
-
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  color: inherit;
-
-  &__logo {
-    height: 36px;
-    width: auto;
-    display: block;
-  }
-  &__name {
-    font-weight: 700;
-    letter-spacing: 0.2px;
-  }
-}
-
-.links {
-  display: inline-flex;
-  gap: 0.75rem;
-
-  a {
-    padding: 0.3rem 0.55rem;
-    border-radius: $radius-sm;
-    transition:
-      background-color 120ms ease,
-      color 120ms ease;
-    color: $muted-color;
-
-    &:hover {
-      color: $blue-color;
-      background: $surface-hover;
-    }
-    &.router-link-exact-active {
-      color: $blue-color;
-      font-weight: 600;
-    }
-  }
-
-  @media (max-width: 900px) {
-    justify-content: center;
-  }
-}
-
-.meta {
-  text-align: right;
-
-  .meta__line {
-    margin: 0.1rem 0;
-    color: $muted-color;
-    font-size: 0.9rem;
-
-    a {
-      color: inherit;
-      text-decoration: underline;
-      text-underline-offset: 2px;
-
-      &:hover {
-        color: $red-color;
-      }
-    }
-  }
-
-  @media (max-width: 900px) {
-    text-align: center;
-  }
-}
-</style>
-
-
-==== ./frontend\src\components\structure\Navbar.vue ====
-<template>
-  <header class="navbar">
-    <div class="navbar__inner">
-      <router-link to="/" class="brand">
-        <img class="brand__logo" src="@/assets/logo.png" alt="Logo" />
-        <span class="brand__name">Wolontariat</span>
-      </router-link>
-
-      <nav class="nav">
-        <router-link to="/">Ogłoszenia</router-link>
-        <router-link to="/login">Logowanie</router-link>
-        <router-link to="/dashboard">Panel</router-link>
-      </nav>
-
-      <div class="role" v-if="auth.rolesAvailable.length">
-        <label v-if="auth.rolesAvailable.length > 1" class="role__switch">
-          Rola:
-          <select :value="auth.currentRole" @change="onChange" class="select">
-            <option v-for="r in auth.rolesAvailable" :key="r" :value="r">
-              {{ auth.ROLE_LABEL[r] || r }}
-            </option>
-          </select>
-        </label>
-        <span v-else class="badge">
-          {{ auth.ROLE_LABEL[auth.currentRole] || auth.currentRole }}
-        </span>
-      </div>
-    </div>
-  </header>
-</template>
-
-<script setup>
-import { useAuthStore } from '@/stores/auth.js'
-const auth = useAuthStore()
-function onChange(e) {
-  auth.setRole(e.target.value)
-}
-</script>
-
-<style scoped lang="scss">
-.navbar {
-  position: relative;
-  top: 0;
-  z-index: 50;
-  background: $surface;
-  border-bottom: 1px solid $border-color;
-}
-
-.navbar__inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0.75rem 1rem;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 1rem;
-}
-
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  color: $font-color;
-
-  &__logo {
-    height: 36px;
-    width: auto;
-    display: block;
-  }
-  &__name {
-    font-weight: 700;
-    letter-spacing: 0.2px;
-  }
-}
-
-.nav {
-  display: inline-flex;
-  gap: 0.25rem;
-
-  a {
-    padding: 0.45rem 0.7rem;
-    border-radius: 8px;
-    transition:
-      background-color 120ms ease,
-      color 120ms ease;
-    color: $font-color;
-
-    &:hover {
-      background: $surface-hover;
-    }
-    &.router-link-exact-active {
-      color: $blue-color;
-      background: $surface-hover;
-      font-weight: 600;
-    }
-  }
-}
-
-.role {
-  display: inline-flex;
-  align-items: center;
-}
-.role__switch {
-  display: inline-flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-.select {
-  padding: 0.35rem 0.6rem;
-  border: 1px solid $border-color;
-  border-radius: 8px;
-  background: $surface;
-}
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.2rem 0.5rem;
-  border-radius: 6px;
-  background: $surface-hover;
-  border: 1px solid $border-color;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-</style>
-
-
-==== ./frontend\src\mocks\certificates.js ====
-// Uproszczone mocki pod certyfikaty.
-// Zakładamy, że certyfikat można wygenerować dla zakończonych eventów,
-// w których dany user brał udział (jest na przynajmniej 1 tasku).
-
-const now = new Date()
-const day = 24 * 60 * 60 * 1000
-const iso = (d) => new Date(d).toISOString()
-
-export const mockUsers = [
-  { id: 'u-1', name: 'Test User' }, // nasz zalogowany
-  { id: 'u-2', name: 'Wolontariusz Kowalski' },
-  { id: 'u-3', name: 'Wolontariusz Anna' },
-  { id: 'u-4', name: 'Wolontariusz Bartek' },
-  { id: 'u-8', name: 'Wolontariusz Ola' },
-]
-
-export const mockEvents = [
-  {
-    id: 'evt-100',
-    name: 'Porządkowanie Parku',
-    description: 'Akcja sprzątania po weekendzie.',
-    status: 'FINISHED',
-    institution_id: 'inst-3',
-    start_date: iso(now.getTime() - 7 * day),
-    end_date: iso(now.getTime() - 7 * day + 3 * 60 * 60 * 1000),
-    groups: [
-      {
-        id: 'grp-a',
-        name: 'Strefa wschodnia',
-        tasks: [
-          {
-            id: 'tsk-a1',
-            name: 'Zbieranie odpadów',
-            start_date: iso(now.getTime() - 7 * day),
-            end_date: iso(now.getTime() - 7 * day + 3 * 60 * 60 * 1000),
-            users: [{ id: 'u-1' }, { id: 'u-8' }],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'evt-101',
-    name: 'Zbiórka Żywności',
-    description: 'Akcja w kilku sklepach.',
-    status: 'FINISHED',
-    institution_id: 'inst-2',
-    start_date: iso(now.getTime() - 3 * day),
-    end_date: iso(now.getTime() - 3 * day + 6 * 60 * 60 * 1000),
-    groups: [
-      {
-        id: 'grp-b',
-        name: 'Sklep A',
-        tasks: [
-          {
-            id: 'tsk-b1',
-            name: 'Zmiana poranna',
-            start_date: iso(now.getTime() - 3 * day),
-            end_date: iso(now.getTime() - 3 * day + 3 * 60 * 60 * 1000),
-            users: [{ id: 'u-3' }],
-          },
-          {
-            id: 'tsk-b2',
-            name: 'Zmiana popołudniowa',
-            start_date: iso(now.getTime() - 3 * day + 3 * 60 * 60 * 1000),
-            end_date: iso(now.getTime() - 3 * day + 6 * 60 * 60 * 1000),
-            users: [{ id: 'u-4' }],
-          },
-        ],
-      },
-    ],
-  },
-  // Do podglądu – event bieżący (nie generujemy z niego certyfikatów)
-  {
-    id: 'evt-102',
-    name: 'Bieg Charytatywny',
-    description: 'Park Jordana.',
-    status: 'CONFIRMED',
-    institution_id: 'inst-1',
-    start_date: iso(now.getTime() + 2 * day),
-    end_date: iso(now.getTime() + 2 * day + 4 * 60 * 60 * 1000),
-    groups: [
-      {
-        id: 'grp-c',
-        name: 'Strefa Startu',
-        tasks: [
-          {
-            id: 'tsk-c1',
-            name: 'Rejestracja',
-            start_date: iso(now.getTime() + 2 * day),
-            end_date: iso(now.getTime() + 2 * day + 2 * 60 * 60 * 1000),
-            users: [{ id: 'u-1' }, { id: 'u-3' }],
-          },
-        ],
-      },
-    ],
-  },
-]
-
-// Zwraca listę eventów FINISHED, w których brał udział userId
-export function mockEligibleEventsForUser(userId) {
-  const finished = mockEvents.filter((e) => new Date(e.end_date).getTime() < Date.now())
-  return finished.filter((e) =>
-    (e.groups || []).some((g) =>
-      (g.tasks || []).some((t) => (t.users || []).some((u) => u.id === userId)),
-    ),
-  )
-}
-
-// Koordynator – przykładowo ma „pod sobą” u-3 i u-4
-export function mockCoordinatorVolunteers(coordinatorId) {
-  // coordinatorId nieużywany w mocku – zawsze ci sami
-  return mockUsers.filter((u) => ['u-3', 'u-4'].includes(u.id))
-}
-
-// Organizator – zwracamy wolontariuszy, którzy uczestniczyli w jego eventach (tu: inst-2)
-export function mockOrganizerVolunteers(organizerId) {
-  // organizerId nieużywany w mocku – uproszczenie
-  const involvedIds = new Set()
-  mockEvents
-    .filter((e) => e.institution_id === 'inst-2' || e.institution_id === 'inst-3')
-    .forEach((e) =>
-      e.groups.forEach((g) =>
-        g.tasks.forEach((t) => t.users.forEach((u) => involvedIds.add(u.id))),
-      ),
-    )
-  return mockUsers.filter((u) => involvedIds.has(u.id))
-}
-
-// Admin – wszyscy
-export function mockAllVolunteers() {
-  return mockUsers
-}
-
-// Fallback: „generujemy” pseudo-PDF (właściwie zwykły blob z tekstem)
-export function mockCertificateBlob({ event, user }) {
-  const text = `
-CERTYFIKAT UCZESTNICTWA
-Uczestnik: ${user?.name || user?.id}
-Wydarzenie: ${event?.name} (${event?.id})
-Data: ${new Date().toLocaleString()}
-
-To jest przykładowy mock certyfikatu (PDF placeholder).
-`
-  return new Blob([text], { type: 'application/pdf' })
-}
-
-
-==== ./frontend\src\mocks\events.js ====
-// Prosty mock danych kalendarza, zgodny z naszymi typami.
-export function mockEventsForUser() {
-  // daty w ISO, kilka eventów przeszłych i przyszłych
-  const now = new Date()
-  const day = 24 * 60 * 60 * 1000
-
-  const iso = (d) => new Date(d).toISOString()
-
-  return [
-    {
-      id: 'evt-krk-001',
-      name: 'Bieg Charytatywny',
-      description: 'Wydarzenie biegowe w Parku Jordana.',
-      status: 'CONFIRMED',
-      institution_id: 'inst-1',
-      start_date: iso(now.getTime() + 3 * day),
-      end_date: iso(now.getTime() + 3 * day + 3 * 60 * 60 * 1000),
-      groups: [
-        {
-          id: 'grp-1',
-          name: 'Strefa Startu',
-          tasks: [
-            {
-              id: 'tsk-1',
-              name: 'Rejestracja uczestników',
-              start_date: iso(now.getTime() + 3 * day),
-              end_date: iso(now.getTime() + 3 * day + 2 * 60 * 60 * 1000),
-              users: [{ id: 'u-2' }, { id: 'u-3' }],
-            },
-            {
-              id: 'tsk-2',
-              name: 'Wydawanie numerów',
-              start_date: iso(now.getTime() + 3 * day),
-              end_date: iso(now.getTime() + 3 * day + 2 * 60 * 60 * 1000),
-              users: [{ id: 'u-4' }],
-            },
-          ],
-        },
-        {
-          id: 'grp-2',
-          name: 'Trasa',
-          tasks: [
-            {
-              id: 'tsk-3',
-              name: 'Nawadnianie 5km',
-              start_date: iso(now.getTime() + 3 * day + 60 * 60 * 1000),
-              end_date: iso(now.getTime() + 3 * day + 3 * 60 * 60 * 1000),
-              users: [{ id: 'u-5' }, { id: 'u-6' }],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'evt-krk-002',
-      name: 'Zbiórka Żywności',
-      description: 'Akcja w kilku sklepach na terenie miasta.',
-      status: 'CONFIRMED',
-      institution_id: 'inst-2',
-      start_date: iso(now.getTime() + 7 * day),
-      end_date: iso(now.getTime() + 7 * day + 8 * 60 * 60 * 1000),
-      groups: [
-        {
-          id: 'grp-3',
-          name: 'Sklep A',
-          tasks: [
-            {
-              id: 'tsk-4',
-              name: 'Zmiana poranna',
-              start_date: iso(now.getTime() + 7 * day),
-              end_date: iso(now.getTime() + 7 * day + 4 * 60 * 60 * 1000),
-              users: [{ id: 'u-1' }], // nasz test user
-            },
-            {
-              id: 'tsk-5',
-              name: 'Zmiana popołudniowa',
-              start_date: iso(now.getTime() + 7 * day + 4 * 60 * 60 * 1000),
-              end_date: iso(now.getTime() + 7 * day + 8 * 60 * 60 * 1000),
-              users: [{ id: 'u-7' }],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'evt-krk-000',
-      name: 'Porządkowanie Parku',
-      description: 'Akcja sprzątania po weekendzie.',
-      status: 'FINISHED',
-      institution_id: 'inst-3',
-      start_date: iso(now.getTime() - 5 * day),
-      end_date: iso(now.getTime() - 5 * day + 3 * 60 * 60 * 1000),
-      groups: [
-        {
-          id: 'grp-4',
-          name: 'Strefa wschodnia',
-          tasks: [
-            {
-              id: 'tsk-6',
-              name: 'Zbieranie odpadów',
-              start_date: iso(now.getTime() - 5 * day),
-              end_date: iso(now.getTime() - 5 * day + 3 * 60 * 60 * 1000),
-              users: [{ id: 'u-1' }, { id: 'u-8' }],
-            },
-          ],
-        },
-      ],
-    },
-  ]
-}
-
-
-==== ./frontend\src\mocks\groups.js ====
-import { mockEventsForUser } from './events.js'
-
-// Zwraca spłaszczoną listę grup (z eventami) widocznych dla koordynatora.
-// W mocku używamy tych samych eventów, co w kalendarzu.
-export function mockGroupsForCoordinator(coordinatorId = 'u-1') {
-  // Używamy listy eventów z mocka; w realu – zapytanie do backendu.
-  const events = mockEventsForUser()
-  const list = []
-  for (const ev of events) {
-    for (const g of ev.groups || []) {
-      list.push({
-        eventId: ev.id,
-        eventName: ev.name,
-        groupId: g.id,
-        groupName: g.name,
-      })
-    }
-  }
-  return list
-}
-
-
-==== ./frontend\src\router\index.js ====
-import { createRouter, createWebHistory } from 'vue-router'
-import LoginPage from '../views/LoginPage.vue'
-import BrowserPage from '../views/BrowserPage.vue'
-import DashboardPage from '../views/DashboardPage.vue'
-
-const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'browser',
-      component: BrowserPage,
-    },
-    {
-      path: '/login',
-      name: 'login',
-      component: LoginPage,
-    },
-    {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: DashboardPage,
-      // meta: { requiresAuth: true },
-      redirect: '/dashboard/panel',
-      children: [
-        {
-          path: 'panel',
-          name: 'dashboard-panel',
-          component: () => import('../components/dashboard/Categories/AllDashboard.vue'),
-        },
-        {
-          path: 'user',
-          name: 'dashboard-user',
-          component: () => import('../components/dashboard/Categories/AllUserData.vue'),
-        },
-        {
-          path: 'calendar',
-          name: 'dashboard-calendar',
-          component: () => import('../components/dashboard/Categories/AllCalendar.vue'),
-        },
-        {
-          path: 'certificates',
-          name: 'dashboard-certificates',
-          component: () => import('../components/dashboard/Categories/AllCertificates.vue'),
-        },
-        {
-          path: 'reports',
-          name: 'dashboard-reports',
-          component: () => import('../components/dashboard/Categories/AllReports.vue'),
-        },
-        {
-          path: 'contact',
-          name: 'dashboard-contact',
-          component: () => import('../components/dashboard/Categories/CoordContact.vue'),
-        },
-        {
-          path: 'advert-publication',
-          name: 'dashboard-advert-publication',
-          component: () => import('../components/dashboard/Categories/OrgAdvertPublication.vue'),
-        },
-        {
-          path: 'alert-settings',
-          name: 'dashboard-alert-settings',
-          component: () => import('../components/dashboard/Categories/OrgAlertSettings.vue'),
-        },
-        {
-          path: 'application-management',
-          name: 'dashboard-application-management',
-          component: () =>
-            import('../components/dashboard/Categories/OrgApplicationManagement.vue'),
-        },
-        {
-          path: 'opinions',
-          name: 'dashboard-opinions',
-          component: () => import('../components/dashboard/Categories/OrgOpinions.vue'),
-        },
-        {
-          path: 'institution-verification',
-          name: 'dashboard-institution-verification',
-          component: () => import('../components/dashboard/Categories/SudoOrgVerification.vue'),
-        },
-        {
-          path: 'event-verification',
-          name: 'dashboard-event-verification',
-          component: () => import('../components/dashboard/Categories/SudoEventVerification.vue'),
-        },
-        {
-          path: 'notification-settings',
-          name: 'dashboard-notification-settings',
-          component: () => import('../components/dashboard/Categories/VolNotifSettings.vue'),
-        },
-      ],
-    },
-    {
-      path: '/:pathMatch(.*)*',
-      name: 'not-found',
-      component: () => import('@/views/NotFound.vue'),
-    },
-  ],
-})
-
-router.beforeEach((to) => {
-  const token = localStorage.getItem('token')
-  if (to.meta.requiresAuth && !token) {
-    //return { name: 'login' }
-    console.log('No token found.')
-  }
-})
-
-export default router
-
-
-==== ./frontend\src\stores\auth.js ====
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-
-export const ROLE = {
-  VOLUNTEER: 'VOLUNTEER',
-  COORDINATOR: 'COORDINATOR',
-  ORG_ADMIN: 'ORG_ADMIN',
-  GOV_ADMIN: 'GOV_ADMIN',
-}
-
-export const ROLE_LABEL = {
-  [ROLE.VOLUNTEER]: 'Wolontariusz',
-  [ROLE.COORDINATOR]: 'Koordynator',
-  [ROLE.ORG_ADMIN]: 'Admin organizacji',
-  [ROLE.GOV_ADMIN]: 'Admin rządowy',
-}
-
-export const useAuthStore = defineStore('auth', () => {
-  const user = ref(null)
-  const rolesAvailable = ref([])
-  const currentRole = ref(null)
-
-  function setAuthFromBackend({ user: u, roles }) {
-    user.value = u || null
-    const r = Array.isArray(roles) ? roles : roles ? [roles] : []
-    rolesAvailable.value = r
-    currentRole.value = r[0] || null
-  }
-
-  function setRole(role) {
-    if (rolesAvailable.value.includes(role)) currentRole.value = role
-  }
-
-  const isGovAdmin = computed(() => currentRole.value === ROLE.GOV_ADMIN)
-  const isOrgAdmin = computed(() => currentRole.value === ROLE.ORG_ADMIN)
-  const isCoordinator = computed(() => currentRole.value === ROLE.COORDINATOR)
-  const isVolunteer = computed(() => currentRole.value === ROLE.VOLUNTEER)
-
-  return {
-    // state
-    user,
-    rolesAvailable,
-    currentRole,
-    // labels/enums
-    ROLE,
-    ROLE_LABEL,
-    // actions
-    setAuthFromBackend,
-    setRole,
-    // getters
-    isGovAdmin,
-    isOrgAdmin,
-    isCoordinator,
-    isVolunteer,
-  }
-})
-
-
-==== ./frontend\src\views\BrowserPage.vue ====
-<template>Browser Page</template>
-
-<script setup></script>
-
-<style></style>
-
-
-==== ./frontend\src\views\DashboardPage.vue ====
+==== ./frontend/src/views/DashboardPage.vue ====
 <template>
   <div class="dashboard">
     <div class="settings-bar"><SettingsBar /></div>
@@ -2499,7 +2711,35 @@ import SettingsBar from '@/components/dashboard/SettingsBar.vue'
 </style>
 
 
-==== ./frontend\src\views\LoginPage.vue ====
+==== ./frontend/src/views/MainView.vue ====
+<template>
+  <div class="container">
+    <Navbar />
+    <div class="content">
+      <router-view />
+    </div>
+    <Footer />
+  </div>
+</template>
+
+<script setup>
+import Navbar from '@/components/structure/Navbar.vue'
+import Footer from '@/components/structure/Footer.vue'
+</script>
+
+<style scoped>
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+}
+.content {
+  min-height: calc(100vh - 100px);
+}
+</style>
+
+
+==== ./frontend/src/views/LoginPage.vue ====
 <template>
   <div class="login">
     <h2>Testowy login</h2>
@@ -2582,35 +2822,7 @@ async function loginTest() {
 </style>
 
 
-==== ./frontend\src\views\MainView.vue ====
-<template>
-  <div class="container">
-    <Navbar />
-    <div class="content">
-      <router-view />
-    </div>
-    <Footer />
-  </div>
-</template>
-
-<script setup>
-import Navbar from '@/components/structure/Navbar.vue'
-import Footer from '@/components/structure/Footer.vue'
-</script>
-
-<style scoped>
-.container {
-  display: flex;
-  flex-direction: column;
-  width: 100vw;
-}
-.content {
-  min-height: calc(100vh - 100px);
-}
-</style>
-
-
-==== ./frontend\src\views\NotFound.vue ====
+==== ./frontend/src/views/NotFound.vue ====
 <template>
   <div class="nf">
     <div class="panel">
@@ -2726,5 +2938,1243 @@ h1 {
   }
 }
 </style>
+
+
+==== ./frontend/src/views/BrowserPage.vue ====
+<template>Browser Page</template>
+
+<script setup></script>
+
+<style></style>
+
+
+==== ./frontend/src/router/index.js ====
+import { createRouter, createWebHistory } from 'vue-router'
+import LoginPage from '../views/LoginPage.vue'
+import BrowserPage from '../views/BrowserPage.vue'
+import DashboardPage from '../views/DashboardPage.vue'
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/',
+      name: 'browser',
+      component: BrowserPage,
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginPage,
+    },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: DashboardPage,
+      // meta: { requiresAuth: true },
+      redirect: '/dashboard/panel',
+      children: [
+        {
+          path: 'panel',
+          name: 'dashboard-panel',
+          component: () => import('../components/dashboard/Categories/AllDashboard.vue'),
+        },
+        {
+          path: 'user',
+          name: 'dashboard-user',
+          component: () => import('../components/dashboard/Categories/AllUserData.vue'),
+        },
+        {
+          path: 'calendar',
+          name: 'dashboard-calendar',
+          component: () => import('../components/dashboard/Categories/AllCalendar.vue'),
+        },
+        {
+          path: 'certificates',
+          name: 'dashboard-certificates',
+          component: () => import('../components/dashboard/Categories/AllCertificates.vue'),
+        },
+        {
+          path: 'reports',
+          name: 'dashboard-reports',
+          component: () => import('../components/dashboard/Categories/AllReports.vue'),
+        },
+        {
+          path: 'contact',
+          name: 'dashboard-contact',
+          component: () => import('../components/dashboard/Categories/CoordContact.vue'),
+        },
+        {
+          path: 'advert-publication',
+          name: 'dashboard-advert-publication',
+          component: () => import('../components/dashboard/Categories/OrgAdvertPublication.vue'),
+        },
+        {
+          path: 'alert-settings',
+          name: 'dashboard-alert-settings',
+          component: () => import('../components/dashboard/Categories/OrgAlertSettings.vue'),
+        },
+        {
+          path: 'application-management',
+          name: 'dashboard-application-management',
+          component: () =>
+            import('../components/dashboard/Categories/OrgApplicationManagement.vue'),
+        },
+        {
+          path: 'opinions',
+          name: 'dashboard-opinions',
+          component: () => import('../components/dashboard/Categories/OrgOpinions.vue'),
+        },
+        {
+          path: 'institution-verification',
+          name: 'dashboard-institution-verification',
+          component: () => import('../components/dashboard/Categories/SudoOrgVerification.vue'),
+        },
+        {
+          path: 'event-verification',
+          name: 'dashboard-event-verification',
+          component: () => import('../components/dashboard/Categories/SudoEventVerification.vue'),
+        },
+        {
+          path: 'notification-settings',
+          name: 'dashboard-notification-settings',
+          component: () => import('../components/dashboard/Categories/VolNotifSettings.vue'),
+        },
+      ],
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('@/views/NotFound.vue'),
+    },
+  ],
+})
+
+router.beforeEach((to) => {
+  const token = localStorage.getItem('token')
+  if (to.meta.requiresAuth && !token) {
+    //return { name: 'login' }
+    console.log('No token found.')
+  }
+})
+
+export default router
+
+
+==== ./frontend/data/endpoints/endpoints.txt ====
+User
+    GET /user/:user_id
+    bez niego zwraca dane aktualnego, z nim docelowego
+
+    GET/POST /user/:user_id/localization
+    ustalenie użytkowników
+
+    GET /events/all/users/:user_id
+    wyświetli eventy, które widzi user. Wolontariusz widzi swoje,
+    koordynator widzi swoich wolontariuszy, organizator widzi swoje,
+    admin posiada wszystkie
+
+    Opinions
+      POST /user/:user_id/opinion
+
+      GET/PATCH/DEL /user/:user_id/opinion/:opinion_id
+
+    Notifications
+      POST /user/:user_id/notification
+
+      GET/PATCH/DEL /user/:user_id/notification/:notification_id
+
+TASK
+
+    GET /group/:group_id/user/free
+    użytkownicy nieprzypisani do tasków
+
+    POST /group/:group_id/task
+
+    GET/PATCH/DEL /group/:group_id/task/:task_id
+
+    POST /group/:group_id/task/:task_id/user
+
+    GET/DEL /group/:group_id/task/:task_id/user/:user_id
+    pobieranie i usuwanie usera do taska
+
+Certificates/Chat
+
+    GET /event/:event_id/user/:user_id
+    pobieranie certyfikatu
+
+    GET/POST /event/:event_id/user/:user_id/chat
+    /tutaj endpointy do obsługi czatu koord - org
+
+Event
+    POST /event
+
+    GET/PATCH/DEL /event/:event_id
+
+    GET /event/unconfirmed
+
+    POST /event/:event_id/confirm
+
+Group
+
+    POST /event/:event_id/group
+
+    GET/PATCH/DEL /event/:event_id/group/:group_id
+
+    DELETE/POST/GET /event/:event_id/group/:group_id/user/:user_id
+    usuwa usera z grupy
+    dodaje usera do group
+
+
+Alerts
+    POST /event/:event_id/alert
+
+    GET/PATCH/DEL /event/:event_id/alert/alert_id
+
+Org
+    POST /institution
+    Tworzy organizacje
+
+    GET/PATCH/DEL /institution/:institution_id
+
+    GET /institution/unconfirmed
+    zwraca organizacje czekające na zatwierdzenie
+
+    POST /institution/:institution_id/confirm
+
+    POST/GET/PATCH/DEL /institution/:institution_id/user/:user_id
+
+
+Specjalne user_id = me, czyli bierzemy user id z tokena login gov
+
+
+==== ./frontend/data/types/group.json ====
+{
+  "id": "string",
+  "name": "string",
+  "description": "string",
+  "admin_id": "string",
+  "parent_group_id": "string",
+  "institution_id": "string",
+  "location": {
+    "lat": "number",
+    "lng": "number"
+  },
+  "groups": [
+    {
+      "id": "string"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "string"
+    }
+  ]
+}
+
+
+==== ./frontend/data/types/alert.json ====
+{
+  "id": "string",
+  "user_id": "string",
+  "event_id": "string",
+  "type": "string",
+  "condition": "string"
+}
+
+
+==== ./frontend/data/types/institution.json ====
+{
+  "id": "string",
+  "name": "string",
+  "description": "string",
+  "status": "string",
+  "admins": [
+    {
+      "id": "string"
+    }
+  ],
+  "events": [
+    {
+      "id": "string"
+    }
+  ]
+}
+
+
+==== ./frontend/data/types/chat.json ====
+{
+  "chat_id": "evt-101:u-3",
+  "event_id": "evt-101",
+  "participants": [
+    { "user_id": "u-3", "role": "VOLUNTEER", "display_name": "Wolontariusz Anna" },
+    { "user_id": "org-22", "role": "ORGANIZER", "display_name": "Organizator Marek" }
+  ],
+  "last_seen": {
+    "u-3": "2025-10-05T08:15:02.121Z",
+    "org-22": "2025-10-05T08:18:55.331Z"
+  },
+  "messages": [
+    {
+      "id": "m-1",
+      "ts": "2025-10-05T07:59:12.003Z",
+      "sender_id": "u-3",
+      "text": "Dzień dobry! Czy mogę zamienić zmianę na popołudniową?",
+      "meta": { "delivered": true, "read_at": "2025-10-05T08:03:20.000Z" }
+    },
+    {
+      "id": "m-2",
+      "ts": "2025-10-05T08:04:10.910Z",
+      "sender_id": "org-22",
+      "text": "Hej! Tak, spróbujemy to ogarnąć. Którą godzinę wolisz?",
+      "meta": { "delivered": true }
+    },
+    {
+      "id": "m-3",
+      "ts": "2025-10-05T08:06:42.410Z",
+      "sender_id": "u-3",
+      "text": "16:00–20:00 byłoby idealnie.",
+      "meta": { "delivered": true }
+    }
+  ]
+}
+
+
+==== ./frontend/data/types/task.json ====
+{
+  "id": "string",
+  "name": "string",
+  "description": "string",
+  "group_id": "string",
+  "start_date": "string",
+  "end_date": "string",
+  "location": {
+    "lat": "number",
+    "lng": "number"
+  },
+  "users": [
+    {
+      "id": "string"
+    }
+  ]
+}
+
+
+==== ./frontend/data/types/event.json ====
+{
+  "id": "string",
+  "name": "string",
+  "description": "string",
+  "status": "string",
+  "institution_id": "string",
+  "groups": [
+    {
+      "id": "string"
+    }
+  ],
+  "start_date": "string",
+  "end_date": "string"
+}
+
+
+==== ./frontend/data/types/user.json ====
+{
+  "id": "string",
+  "coordinates": {
+    "lat": "number",
+    "lng": "number"
+  },
+  "events": [
+    {
+      "id": "string"
+    }
+  ],
+  "opinions": [
+    {
+      "id": "string"
+    }
+  ]
+}
+
+
+==== ./frontend/data/types/notification.json ====
+{
+  "id": "string",
+  "user_id": "string",
+  "type": "string",
+  "condition": "string"
+}
+
+
+==== ./frontend/data/types/opinion.json ====
+{
+  "id": "string",
+  "group_id": "string",
+  "rating": "number",
+  "comment": "string"
+}
+
+
+==== ./volcon_api/requirements.txt ====
+appdirs==1.4.4
+asgiref==3.9.2
+attrs==25.3.0
+beautifulsoup4==4.7.1
+cached-property==2.0.1
+certifi==2025.8.3
+charset-normalizer==3.4.3
+defusedxml==0.7.1
+Django==5.2.7
+djangorestframework==3.16.1
+djangorestframework_simplejwt==5.5.1
+idna==3.10
+isodate==0.7.2
+lxml==6.0.2
+PyJWT==2.10.1
+pytz==2025.2
+RegonAPI==1.3.1
+requests==2.32.5
+requests-toolbelt==1.0.0
+six==1.17.0
+soupsieve==2.8
+sqlparse==0.5.3
+urllib3==2.5.0
+zeep==3.3.1 
+
+
+==== ./volcon_api/output.txt ====
+==== ./manage.py ====
+#!/usr/bin/env python
+"""Django's command-line utility for administrative tasks."""
+import os
+import sys
+
+
+def main():
+    """Run administrative tasks."""
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'main_backend.settings')
+    try:
+        from django.core.management import execute_from_command_line
+    except ImportError as exc:
+        raise ImportError(
+            "Couldn't import Django. Are you sure it's installed and "
+            "available on your PYTHONPATH environment variable? Did you "
+            "forget to activate a virtual environment?"
+        ) from exc
+    execute_from_command_line(sys.argv)
+
+
+if __name__ == '__main__':
+    main()
+
+
+==== ./requirements.txt ====
+appdirs==1.4.4
+asgiref==3.9.2
+attrs==25.3.0
+beautifulsoup4==4.7.1
+cached-property==2.0.1
+certifi==2025.8.3
+charset-normalizer==3.4.3
+defusedxml==0.7.1
+Django==5.2.7
+djangorestframework==3.16.1
+djangorestframework_simplejwt==5.5.1
+idna==3.10
+isodate==0.7.2
+lxml==6.0.2
+PyJWT==2.10.1
+pytz==2025.2
+RegonAPI==1.3.1
+requests==2.32.5
+requests-toolbelt==1.0.0
+six==1.17.0
+soupsieve==2.8
+sqlparse==0.5.3
+urllib3==2.5.0
+zeep==3.3.1 
+
+
+==== ./output.txt ====
+
+
+==== ./skrypt.py ====
+import os
+
+def save_files_content_to_txt(root_folder, output_file, ignore_dirs=None):
+    """Rekurencyjnie odczytuje pliki .py w folderach, z pominięciem katalogów z ignore_dirs,
+    i zapisuje ich treść do pliku tekstowego."""
+    ignore_dirs = set(ignore_dirs or [])
+
+    with open(output_file, 'w', encoding='utf-8') as outfile:
+        for root, dirs, files in os.walk(root_folder):
+            dirs[:] = [d for d in dirs if d not in ignore_dirs]
+
+            for file in files:
+                if file.endswith('.py') or file.endswith('.txt') or file.endswith('.json') or file.endswith('.js') or file.endswith('.scss') or file.endswith('.env'):
+                    file_path = os.path.join(root, file)
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as infile:
+                            outfile.write(f"==== {file_path} ====\n")
+                            outfile.write(infile.read())
+                            outfile.write("\n\n")
+                    except Exception as e:
+                        print(f"Nie udało się odczytać pliku {file_path}: {e}")
+
+if __name__ == "__main__":
+    input_folder = "./"
+    output_file = "output.txt"
+    ignore_list = ['venv', '__pycache__', 'build', 'dist', '.git', 'node_modules']
+
+    save_files_content_to_txt(input_folder, output_file, ignore_dirs=ignore_list)
+    print(f"Zawartość plików została zapisana do {output_file}, z pominięciem katalogów: {ignore_list}")
+
+==== ./main_backend/wsgi.py ====
+"""
+WSGI config for main_backend project.
+
+It exposes the WSGI callable as a module-level variable named ``application``.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
+"""
+
+import os
+
+from django.core.wsgi import get_wsgi_application
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'main_backend.settings')
+
+application = get_wsgi_application()
+
+
+==== ./main_backend/asgi.py ====
+"""
+ASGI config for main_backend project.
+
+It exposes the ASGI callable as a module-level variable named ``application``.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
+"""
+
+import os
+
+from django.core.asgi import get_asgi_application
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'main_backend.settings')
+
+application = get_asgi_application()
+
+
+==== ./main_backend/__init__.py ====
+
+
+==== ./main_backend/urls.py ====
+"""
+URL configuration for main_backend project.
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/5.2/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+from django.contrib import admin
+from django.urls import path, include
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView, TokenRefreshView, TokenVerifyView
+)
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('volcon/', include('api.urls')),
+    path('volcon/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('volcon/token/verify/', TokenVerifyView.as_view(), name='token_verify')
+]
+
+
+
+==== ./main_backend/settings.py ====
+"""
+Django settings for main_backend project.
+
+Generated by 'django-admin startproject' using Django 5.2.7.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/5.2/topics/settings/
+
+For the full list of settings and their values, see
+https://docs.djangoproject.com/en/5.2/ref/settings/
+"""
+
+from pathlib import Path
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'django-insecure-71&(yk%74-ho&x^8-=z3vwpyw7se*+19=9fyp%^_ut8az%sn)3'
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+
+ALLOWED_HOSTS = ['*']
+
+
+# Application definition
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'api',
+]
+
+# settings.py
+INSTALLED_APPS += ['rest_framework',]
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ROOT_URLCONF = 'main_backend.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = 'main_backend.wsgi.application'
+
+
+# Database
+# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+
+# Password validation
+# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+
+# Internationalization
+# https://docs.djangoproject.com/en/5.2/topics/i18n/
+
+LANGUAGE_CODE = 'en-us'
+
+TIME_ZONE = 'UTC'
+
+USE_I18N = True
+
+USE_TZ = True
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.2/howto/static-files/
+
+STATIC_URL = 'static/'
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+==== ./main_backend/external_api/krs_api_handler.py ====
+import requests
+
+# gets the krs info in JSON format
+def getKRSinfo(krsNumber):
+    response = requests.get(f"https://api-krs.ms.gov.pl/api/krs/OdpisAktualny/{krsNumber}?rejestr=P&format=json")
+    return response.json()
+
+==== ./main_backend/external_api/handle_external_api.py ====
+import external_api.regon_api_handler as rah
+import external_api.krs_api_handler as kah
+
+def getKRSInfo(KRS_number = None, REGON_number = None):
+    if(KRS_number is None and REGON_number is None):
+        return None
+    
+    if(KRS_number is None):
+        regon_api = rah.initializeRegonApi()
+        KRS_number = rah.getKRSFromREGON(regon_api, REGON_number)
+    
+    KRS_info = kah.getKRSinfo(KRS_number)
+    return KRS_info
+
+def getMainInfoFromREGON(REGON_number):
+    REGON_info = rah.getInfoFromREGON(REGON_number)
+    main_info = {
+        "name":     REGON_info["praw_nazwa"],
+        "nip":      REGON_info["praw_nip"],
+        "country":  REGON_info["praw_adSiedzKraj_Nazwa"],
+        "voivodeship": REGON_info["praw_adSiedzWojewodztwo_Nazwa"],
+        "city": REGON_info["praw_adSiedzMiejscowosc_Nazwa"],
+        "street": REGON_info["praw_adSiedzUlica_Nazwa"],
+        "street_number": REGON_info["praw_adSiedzNumerNieruchomosci"],
+        "postal_code": REGON_info["praw_adSiedzKodPocztowy"]
+    }
+    return main_info
+
+==== ./main_backend/external_api/regon_api_handler.py ====
+from RegonAPI import RegonAPI
+from RegonAPI.exceptions import ApiAuthenticationError
+
+API_KEY = "abcde12345abcde12345"
+
+# initializes Regon API
+def initializeRegonApi() -> RegonAPI:
+    api = RegonAPI(
+    bir_version="bir1.1", is_production=False, timeout=10, operation_timeout=10
+    )
+    try:
+        api.authenticate(key=API_KEY)
+    except ApiAuthenticationError as e:
+        print("[-]", e)
+        exit(0)
+    except Exception as e:
+        raise
+
+    return api
+
+# gets the KRS number for REGON number using regon API
+def getKRSFromREGON(regonApi: RegonAPI, regonNumber):
+    requestType = "BIR11OsPrawna"
+    regonApi.searchData(regon=regonNumber)
+    result = regonApi.dataDownloadFullReport(regonNumber, requestType)
+    KRSNumber = result[0] #["praw_numerWRejestrzeEwidencji"]
+    return KRSNumber
+
+def getInfoFromREGON(REGON_number):
+    REGON_api = initializeRegonApi()
+    REGON_info = REGON_api.dataDownloadFullReport(REGON_number, "BIR11OsPrawna")
+    return REGON_info[0]
+
+==== ./api/admin.py ====
+from django.contrib import admin
+
+from .models import *
+
+@admin.register(UserLocation)
+class UserLocationAdmin(admin.ModelAdmin):
+    list_display = ('usr_id', 'latitude', 'longitude')  
+    search_fields = ('usr_id',)  
+
+@admin.register(Institution)
+class InstitutionAdmin(admin.ModelAdmin):
+    list_display = ('institution_id', 'is_confirmed', 'regon', 'is_company', 'id_user')  
+    search_fields = ('regon', 'id_user')  
+    list_filter = ('is_confirmed', 'is_company')
+
+@admin.register(Group)
+class GroupAdmin(admin.ModelAdmin):
+    list_display = ('group_id', 'name', 'institution_id', 'is_confirmed')  
+    search_fields = ('name', 'institution_id')  
+    list_filter = ('is_confirmed',)
+
+@admin.register(Task)
+class TaskAdmin(admin.ModelAdmin):
+    list_display = ('task_id', 'name', 'institution_id', 'group_id')  
+    search_fields = ('name', 'institution_id', 'group_id')
+
+@admin.register(TaskAssignment)
+class TaskAssignmentAdmin(admin.ModelAdmin):
+    list_display = ('task_id', 'user_id', 'group_id', 'institution_id')  
+    search_fields = ('task_id', 'user_id', 'group_id', 'institution_id')
+
+@admin.register(Privilege)
+class PrivilegeAdmin(admin.ModelAdmin):
+    list_display = ('user_id', 'privilege')  
+    search_fields = ('user_id',)
+
+@admin.register(Opinion)
+class OpinionAdmin(admin.ModelAdmin):
+    list_display = ('user_id', 'institution_id', 'rating')  
+    search_fields = ('user_id', 'institution_id', 'rating')
+
+@admin.register(Alert)
+class AlertAdmin(admin.ModelAdmin):
+    list_display = ('alert_id', 'user_id',)  
+    search_fields = ('user_id', 'institution_id', 'message')
+
+@admin.register(ExternalUser)
+class ExternalUserAdmin(admin.ModelAdmin):
+    list_display = ('external_user_id', 'name')  
+    search_fields = ('name', 'email')
+
+
+
+==== ./api/specjal_serializers.py ====
+# api/specjal_serializers.py
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
+from django.db.models import Prefetch
+from rest_framework import serializers
+
+from .models import Group, Task, TaskAssignment
+
+
+def _to_iso(value: Optional[str]) -> Optional[str]:
+    """
+    Zwraca ISO 8601 dla przekazanego stringa/datetimy.
+    Zakładamy, że w JSON-ie dates przechowujesz ISO stringi.
+    """
+    if value is None:
+        return None
+    # Jeśli to już ISO string, po prostu zwracamy
+    try:
+        # Spróbuj sparsować — jeśli się uda, zwróć znormalizowane ISO z 'Z'
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        return dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+    except Exception:
+        # Nie parsujemy na siłę — zwróć jak jest (frontend i tak przyjmie ISO)
+        return str(value)
+
+
+def _status_from_dates(start_iso: Optional[str], end_iso: Optional[str]) -> str:
+    """
+    FINISHED jeżeli koniec w przeszłości, w przeciwnym razie CONFIRMED.
+    """
+    if end_iso:
+        try:
+            end_dt = datetime.fromisoformat(end_iso.replace("Z", "+00:00"))
+            now = datetime.now(timezone.utc)
+            return "FINISHED" if end_dt < now else "CONFIRMED"
+        except Exception:
+            pass
+    return "CONFIRMED"
+
+
+class TaskUserSerializer(serializers.Serializer):
+    id = serializers.CharField()
+
+    @staticmethod
+    def from_assignment(ass: TaskAssignment) -> Dict[str, Any]:
+        return {"id": f"u-{ass.user_id}"}
+
+
+class TaskSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    name = serializers.CharField()
+    start_date = serializers.CharField(allow_null=True)
+    end_date = serializers.CharField(allow_null=True)
+    users = TaskUserSerializer(many=True)
+
+    @staticmethod
+    def from_model(task: Task, assignments: List[TaskAssignment]) -> Dict[str, Any]:
+        dates = task.dates or {}
+        start_iso = _to_iso(dates.get("start"))
+        end_iso = _to_iso(dates.get("end"))
+        return {
+            "id": f"tsk-{task.task_id}",
+            "name": task.name,
+            "start_date": start_iso,
+            "end_date": end_iso,
+            "users": [TaskUserSerializer.from_assignment(a) for a in assignments if a.task_id == task.task_id],
+        }
+
+
+class GroupNodeSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    name = serializers.CharField()
+    tasks = TaskSerializer(many=True)
+
+    @staticmethod
+    def from_model(group: Group, tasks: List[Task], task_assignments: List[TaskAssignment]) -> Dict[str, Any]:
+        group_tasks = [t for t in tasks if t.group_id == group.group_id]
+        return {
+            "id": f"grp-{group.group_id}",
+            "name": group.name,
+            "tasks": [
+                TaskSerializer.from_model(t, task_assignments)
+                for t in group_tasks
+            ],
+        }
+
+
+class EventLikeSerializer(serializers.Serializer):
+    """
+    Serializer „eventu” na bazie top-level Group (parent_group_id is NULL).
+    Zwraca strukturę 1:1 jak w mockEventsForUser().
+    """
+    id = serializers.CharField()
+    name = serializers.CharField()
+    description = serializers.CharField(allow_null=True)
+    status = serializers.CharField()
+    institution_id = serializers.CharField()
+    start_date = serializers.CharField(allow_null=True)
+    end_date = serializers.CharField(allow_null=True)
+    groups = GroupNodeSerializer(many=True)
+
+    @staticmethod
+    def from_model(
+        event_group: Group,
+        child_groups: List[Group],
+        tasks: List[Task],
+        task_assignments: List[TaskAssignment],
+    ) -> Dict[str, Any]:
+        dates = event_group.dates or {}
+        start_iso = _to_iso(dates.get("start"))
+        end_iso = _to_iso(dates.get("end"))
+        status = _status_from_dates(start_iso, end_iso)
+
+        children = [g for g in child_groups if g.parent_group_id == event_group.group_id]
+
+        return {
+            "id": f"evt-{event_group.group_id}",
+            "name": event_group.name,
+            "description": event_group.desc or "",
+            "status": status,
+            "institution_id": f"inst-{event_group.institution_id}" if isinstance(event_group.institution_id, int) else str(event_group.institution_id),
+            "start_date": start_iso,
+            "end_date": end_iso,
+            "groups": [
+                GroupNodeSerializer.from_model(child, tasks, task_assignments)
+                for child in children
+            ],
+        }
+
+
+def fetch_calendar_payload() -> List[Dict[str, Any]]:
+    """
+    Buduje listę eventów (top-level groups) wraz z podgrupami, taskami i userami.
+    Zwraca gotowy payload do frontendu (format jak w mockEventsForUser()).
+    """
+    # Top-level „eventy”
+    top_groups = list(Group.objects.filter(parent_group_id__isnull=True))
+
+    # Podgrupy (dzieci)
+    child_groups = list(Group.objects.filter(parent_group_id__isnull=False))
+
+    # Wszystkie taski dla wszystkich grup z góry
+    tasks = list(Task.objects.all())
+
+    # Wszystkie assignmenty (dla mapowania users)
+    assignments = list(TaskAssignment.objects.all())
+
+    # Składamy
+    result = [
+        EventLikeSerializer.from_model(g, child_groups, tasks, assignments)
+        for g in top_groups
+    ]
+    return result
+
+
+==== ./api/models.py ====
+from django.db import models
+
+class UserLocation(models.Model):
+    usr_id = models.IntegerField()
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+
+    def __str__(self):
+        return f"User {self.usr_id}: ({self.latitude}, {self.longitude})"
+
+class Institution(models.Model):
+    institution_id = models.AutoField(primary_key=True)
+    is_confirmed = models.BooleanField(default=False)
+    regon = models.CharField(max_length=14, blank=True, null=True, unique=True)
+    is_company = models.BooleanField(default=False)
+    id_user = models.IntegerField(blank=True, null=True)
+
+    def __str__(self):
+        if self.is_company and self.regon:
+            return f"Firma REGON: {self.regon} (potwierdzona: {self.is_confirmed})"
+        elif self.id_user:
+            return f"Osoba ID: {self.id_user} (potwierdzona: {self.is_confirmed})"
+        return f"Instytucja (potwierdzona: {self.is_confirmed})"
+
+class Group(models.Model):
+    institution_id = models.IntegerField()
+    group_id = models.AutoField(primary_key=True)
+    group_loc = models.JSONField()   
+    desc = models.TextField(blank=True, null=True)
+    parent_group_id = models.IntegerField(blank=True, null=True)
+    name = models.CharField(max_length=255)
+    is_confirmed = models.BooleanField(default=False)
+    dates = models.JSONField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name} (ID: {self.group_id})"
+
+class Task(models.Model):
+    institution_id = models.IntegerField()
+    group_id = models.IntegerField()
+    task_id = models.AutoField(primary_key=True)
+    name = modelharField(max_length=255)
+    desc = models.TextField(blank=True, null=True)
+    dates = models.JSONField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name} (ID: {self.task_id})"
+
+class TaskAssignment(models.Model):
+    institution_id = models.IntegerField()
+    group_id = models.IntegerField()
+    task_id = models.IntegerField()
+    user_id = models.IntegerField()
+
+    def __str__(self):
+        return f"Task {self.task_id} assigned to User {self.user_id} (Group {self.group_id}, Institution {self.institution_id})"
+
+# poprawic primary keys itp
+class Privilege(models.Model):
+    user_id = models.IntegerField()
+    privilege_id = models.AutoField(primary_key=True)
+    institution_id = models.IntegerField()
+    group_id = models.IntegerField()
+    privilege = models.JSONField()
+
+    def __str__(self):
+        return f"Privilege {self.privilege_id} for User {self.user_id} (Institution {self.institution_id}, Group {self.group_id})"
+
+class Opinion(models.Model):
+    institution_id = models.IntegerField()
+    group_id = models.IntegerField()
+    user_id = models.IntegerField()
+    author_id = models.IntegerField()
+    desc = models.TextField()
+    rating = models.IntegerField()
+
+    def __str__(self):
+        return f"Opinia o użytkowniku {self.user_id} (autor: {self.author_id}, instytucja: {self.institution_id}, grupa: {self.group_id})"
+
+class Alert(models.Model):
+    alert_id = models.AutoField(primary_key=True)
+    user_id = models.IntegerField()
+    group_id = models.IntegerField()
+    type = models.IntegerField()
+    condition = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"Alert {self.alert_id} (user: {self.user_id}, group: {self.group_id}, type: {self.type})"
+
+class ExternalUser(models.Model):
+    external_user_id = models.AutoField(primary_key=True)
+    pesel = models.CharField(max_length=11)
+    name = models.CharField(max_length=255)
+    surname = models.CharField(max_length=255)
+    agreement_file = models.BinaryField(blank=True, null=True)
+    supervisor_id = models.IntegerField()
+    institution_id = models.IntegerField()
+    group_id = models.IntegerField()
+    is_accepted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.name} {self.surname} (PESEL: {self.pesel})"
+
+
+
+
+==== ./api/tests.py ====
+from django.test import TestCase
+
+# Create your tests here.
+
+
+==== ./api/views.py ====
+from django.shortcuts import render
+from django.http import JsonResponse
+import json
+
+def get_userid_from_token(access_token):
+    return "2137"
+
+def attach_token_view(request):
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
+    refresh_token = request.GET.get('refresh_token')
+    access_token = request.GET.get('access_token')
+    if refresh_token is None or access_token is None:
+        return JsonResponse({'error': 'Missing tokens'}, status=400)
+    
+    request.session["access_token"] = access_token
+    request.session["refresh_token"] = refresh_token
+
+    print(access_token)
+    return JsonResponse({}, status=200)
+
+def check_token(request):
+    print(request.session["access_token"])
+
+==== ./api/__init__.py ====
+
+
+==== ./api/user_requests.py ====
+from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
+
+mock_database_aaa = {
+    "data": [
+    {
+        "id": "2137",
+        "coordinates": {
+            "lat": "10",
+            "lng": "10"
+        },
+        "events": [
+            {
+            "id": "2222"
+            }
+        ],
+        "opinions": [
+            {
+            "id": "3333"
+            }
+        ]
+    },
+    {
+        "id": "213",
+        "coordinates": {
+            "lat": "10",
+            "lng": "10"
+        },
+        "events": [
+            {
+            "id": "2222"
+            }
+        ],
+        "opinions": [
+            {
+            "id": "3333"
+            }
+        ]
+    }
+]
+}
+
+def get_user_by_id(id):
+    for user in mock_database_aaa["data"]:
+        if user["id"] == id:
+            return user
+    print("here")
+    return None
+
+def get_all_users(request):
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+    return JsonResponse(mock_database_aaa, status=200)
+
+def get_user_data(request, id):
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
+    user_data = get_user_by_id(str(id))
+
+    if user_data is None:
+        return JsonResponse({"error": "user does not exist"}, status=404)
+    
+    return JsonResponse(user_data, status=200)
+
+@csrf_exempt
+def get_set_user_coordinates(request, id):
+    if request.method != 'POST' and request.method != 'GET':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
+    user_data = get_user_by_id(str(id))
+
+    if user_data is None:
+        return JsonResponse({"error": "user does not exist"}, status=404)
+    
+    if request.method == 'POST':
+        user_data["coordinates"]["lat"] = request.POST.get('lat')
+        user_data["coordinates"]["lng"] = request.POST.get('lng')
+        return JsonResponse({}, status=200)
+    
+    return JsonResponse({"lat": user_data["coordinates"]["lat"], "lng": user_data["coordinates"]["lng"]}, status=200)
+
+
+==== ./api/apps.py ====
+from django.apps import AppConfig
+
+
+class ApiConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'api'
+
+
+==== ./api/urls.py ====
+from django.urls import path
+from . import views
+from .views import attach_token_view, check_token
+from .user_requests import get_user_data, get_all_users, get_set_user_coordinates
+
+urlpatterns = [
+    path('attach_token/', attach_token_view, name='attach_token'),
+    path('user/', get_all_users, name='user_detail'),
+    path('user/<int:id>/', get_user_data, name='user_detail'),
+    path('user/<int:id>/localization', get_set_user_coordinates, name='user_detail'),
+    path('check/token', check_token, name='check_token')
+]
+
+
+==== ./api/migrations/__init__.py ====
+
+
 
 
