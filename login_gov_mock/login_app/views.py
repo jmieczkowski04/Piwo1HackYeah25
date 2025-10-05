@@ -159,7 +159,7 @@ def login_page(request):
             print(response_data)
             print(response.status_code)
             if response.status_code == 301:
-                user = User.objects.filter(id = response_data.user_id).first()
+                user = User.objects.filter(id = response_data.get('user_id')).first()
                 if user is None:
                     return HttpResponse('Fuck You', content_type="text/plain")
                 url_to_redirect = get_attach_token_url(user)
