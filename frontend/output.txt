@@ -374,6 +374,9 @@ import { ep } from './endpoints.js'
 // POST /event/:eventId/alert
 export const createAlert = (eventId, body) => api.post(ep.alert(eventId), body)
 
+// (NEW) GET /event/:eventId/alert  — zakładamy listę; jeżeli backend nie ma, UI spadnie na mock
+export const listAlerts = (eventId, params = {}) => api.get(ep.alert(eventId), { params })
+
 // GET/PATCH/DEL /event/:eventId/alert/:alertId
 export const getAlert = (eventId, alertId) => api.get(ep.alertGet(eventId, alertId))
 export const updateAlert = (eventId, alertId, body) =>
@@ -588,6 +591,10 @@ import { ep } from './endpoints.js'
 
 // POST /user/:userId/notification
 export const createNotification = (userId, body) => api.post(ep.notification(userId), body)
+
+// GET /user/:userId/notification
+export const listNotifications = (userId, params = {}) =>
+  api.get(ep.notification(userId), { params })
 
 // GET/PATCH/DEL /user/:userId/notification/:id
 export const getNotification = (userId, id) => api.get(ep.notificationGet(userId, id))
@@ -2895,9 +2902,512 @@ async function seedAutoReply() {
 
 ==== ./src\components\dashboard\Categories\OrgAlertSettings.vue ====
 <template>
-    Tutaj organizator zarządza alertami.</br>
-    damy mu kilka rodzajów alertów
+  <div class="alerts">
+    <header class="head">
+      <h2>Ustawienia alertów (per wydarzenie)</h2>
+      <p class="muted">
+        Alert jest przypięty do <strong>Twojego konta</strong> i konkretnego
+        <strong>wydarzenia</strong>. Różne eventy mogą mieć różne progi/parametry.
+      </p>
+    </header>
+
+    <section class="card">
+      <div class="row">
+        <label class="lbl">Wydarzenie</label>
+        <select class="select" v-model="selectedEventId" @change="reload">
+          <option disabled value="">— wybierz wydarzenie —</option>
+          <option v-for="e in eventOptions" :key="e.id" :value="e.id">{{ e.name }}</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card__head">
+        <h3>{{ editId ? 'Edytuj alert' : 'Dodaj alert' }}</h3>
+        <span v-if="loading" class="muted">Zapisywanie…</span>
+      </div>
+
+      <div class="form">
+        <div class="row">
+          <label class="lbl">Rodzaj alertu</label>
+          <select class="select" v-model="form.type" :disabled="!!editId">
+            <option disabled value="">— wybierz —</option>
+            <option :value="TYPES.VOL_COUNT_OVER">Ponad N zgłoszeń (event/grupa)</option>
+            <option :value="TYPES.LOW_RATING_APPLIED">
+              Zgłosił się wolontariusz z oceną &lt; X
+            </option>
+            <option :value="TYPES.UNDERSTAFFED_TASK">Zadanie ma &lt; M osób (event/grupa)</option>
+          </select>
+        </div>
+
+        <div class="row" v-if="form.type === TYPES.VOL_COUNT_OVER">
+          <label class="lbl">Warunek</label>
+          <div class="stack">
+            <div class="inline">
+              <span>Łącznie zgłoszeń &gt; </span>
+              <input
+                class="input w-120"
+                type="number"
+                min="1"
+                step="1"
+                v-model.number="n"
+                @input="syncVOL"
+              />
+            </div>
+            <div class="inline">
+              <label class="check">
+                <input type="checkbox" v-model="useGroup" @change="syncVOL" />
+                Zawęź do grupy
+              </label>
+              <select class="select" v-model="groupId" :disabled="!useGroup" @change="syncVOL">
+                <option :value="''">— wybierz grupę —</option>
+                <option v-for="g in groupsForEvent" :key="g.id" :value="g.id">{{ g.name }}</option>
+              </select>
+            </div>
+            <small class="muted">Alert, gdy przekroczony zostanie próg zgłoszeń.</small>
+          </div>
+        </div>
+
+        <div class="row" v-else-if="form.type === TYPES.LOW_RATING_APPLIED">
+          <label class="lbl">Warunek</label>
+          <div class="stack">
+            <div class="inline">
+              <span>Średnia ocena &lt;</span>
+              <input
+                class="input w-120"
+                type="number"
+                min="1"
+                max="5"
+                step="0.1"
+                v-model.number="ratingLt"
+                @input="syncRATING"
+              />
+            </div>
+            <small class="muted"
+              >Gdy zgłoszenie z oceną poniżej progu trafi do tego wydarzenia.</small
+            >
+          </div>
+        </div>
+
+        <div class="row" v-else-if="form.type === TYPES.UNDERSTAFFED_TASK">
+          <label class="lbl">Warunek</label>
+          <div class="stack">
+            <div class="inline">
+              <span>Mniej niż</span>
+              <input
+                class="input w-120"
+                type="number"
+                min="1"
+                step="1"
+                v-model.number="minStaff"
+                @input="syncUNDER"
+              />
+              <span>osób na zadaniu</span>
+            </div>
+            <div class="inline">
+              <label class="check">
+                <input type="checkbox" v-model="useGroup" @change="syncUNDER" />
+                Zawęź do grupy
+              </label>
+              <select class="select" v-model="groupId" :disabled="!useGroup" @change="syncUNDER">
+                <option :value="''">— wybierz grupę —</option>
+                <option v-for="g in groupsForEvent" :key="g.id" :value="g.id">{{ g.name }}</option>
+              </select>
+            </div>
+            <small class="muted">Powiadom, jeśli jakieś zadanie jest niedoobsadzone.</small>
+          </div>
+        </div>
+
+        <div class="row" v-else>
+          <label class="lbl">Warunek</label>
+          <span class="muted">Najpierw wybierz rodzaj alertu.</span>
+        </div>
+
+        <div class="actions">
+          <button
+            class="btn btn--primary"
+            :disabled="!canSubmit || !selectedEventId || loading"
+            @click="onSubmit"
+          >
+            {{ editId ? 'Zapisz zmiany' : 'Dodaj' }}
+          </button>
+          <button class="btn" v-if="editId" :disabled="loading" @click="resetForm">Anuluj</button>
+          <span class="err" v-if="error">{{ error }}</span>
+          <span class="ok" v-if="ok">{{ ok }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card__head">
+        <h3>Alerty dla wydarzenia</h3>
+        <button class="btn" @click="reload" :disabled="loading || !selectedEventId">Odśwież</button>
+      </div>
+
+      <template v-if="items.length">
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Rodzaj</th>
+                <th>Warunek</th>
+                <th class="num">Akcje</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="a in items" :key="a.id">
+                <td>{{ labelOf(a.type) }}</td>
+                <td>{{ humanCondition(a) }}</td>
+                <td class="num">
+                  <button class="btn" @click="startEdit(a)">Edytuj</button>
+                  <button class="btn btn--danger" @click="remove(a)" :disabled="loading">
+                    Usuń
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
+      <p class="muted" v-else>Brak alertów dla tego wydarzenia.</p>
+    </section>
+  </div>
 </template>
+
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue'
+import { useAuthStore } from '@/stores/auth.js'
+import { listEventsForUser } from '@/api/user.js'
+import { listAlerts, createAlert, updateAlert, deleteAlert } from '@/api/alert.js'
+import { mockEventsForUser } from '@/mocks/events.js'
+import { listMock, createMock, updateMock, deleteMock } from '@/mocks/alerts.js'
+
+const auth = useAuthStore()
+const userId = computed(() => auth.user?.id || 'u-1')
+
+const TYPES = {
+  VOL_COUNT_OVER: 'VOL_COUNT_OVER',
+  LOW_RATING_APPLIED: 'LOW_RATING_APPLIED',
+  UNDERSTAFFED_TASK: 'UNDERSTAFFED_TASK',
+}
+
+const eventOptions = ref([])
+const selectedEventId = ref('')
+const items = ref([])
+const loading = ref(false)
+const error = ref('')
+const ok = ref('')
+
+const form = ref({ type: '', condition: '' })
+const editId = ref('')
+
+const n = ref(10)
+const useGroup = ref(false)
+const groupId = ref('')
+const ratingLt = ref(3.5)
+const minStaff = ref(2)
+
+// Grupy (pobierane z eventu – w mocku z obiektu eventu)
+const groupsForEvent = computed(() => {
+  const ev = eventOptions.value.find((e) => e.id === selectedEventId.value)
+  if (!ev) return []
+  return (ev.groups || []).map((g) => ({ id: g.id, name: g.name }))
+})
+
+function labelOf(type) {
+  switch (type) {
+    case TYPES.VOL_COUNT_OVER:
+      return 'Ponad N zgłoszeń'
+    case TYPES.LOW_RATING_APPLIED:
+      return 'Zgłoszenie z oceną < X'
+    case TYPES.UNDERSTAFFED_TASK:
+      return 'Zadanie ma < M osób'
+    default:
+      return type || '—'
+  }
+}
+
+function humanCondition(a) {
+  const cond = a.condition || ''
+  if (a.type === TYPES.VOL_COUNT_OVER) {
+    const mN = /(?:^|;)n=(\d+)/i.exec(cond)
+    const mG = /(?:^|;)group_id=([^;]+)/i.exec(cond)
+    const nVal = mN ? mN[1] : '?'
+    const scope = mG ? `grupa ${mG[1]}` : 'cały event'
+    return `zgłoszeń > ${nVal} (${scope})`
+  }
+  if (a.type === TYPES.LOW_RATING_APPLIED) {
+    const m = /(?:^|;)rating_lt=([\d.]+)/i.exec(cond)
+    return m ? `średnia < ${m[1]}` : cond
+  }
+  if (a.type === TYPES.UNDERSTAFFED_TASK) {
+    const mMin = /(?:^|;)min=(\d+)/i.exec(cond)
+    const mG = /(?:^|;)group_id=([^;]+)/i.exec(cond)
+    const scope = mG ? `w grupie ${mG[1]}` : 'w całym evencie'
+    return mMin ? `zadanie z obsadą < ${mMin[1]} (${scope})` : cond
+  }
+  return cond
+}
+
+function syncVOL() {
+  const parts = [`n=${Math.max(1, Math.floor(n.value || 1))}`]
+  if (useGroup.value && groupId.value) parts.push(`group_id=${groupId.value}`)
+  form.value.condition = parts.join(';')
+}
+function syncRATING() {
+  const val = Math.max(1, Math.min(5, Number(ratingLt.value || 1)))
+  form.value.condition = `rating_lt=${val.toFixed(1)}`
+}
+function syncUNDER() {
+  const parts = [`min=${Math.max(1, Math.floor(minStaff.value || 1))}`]
+  if (useGroup.value && groupId.value) parts.push(`group_id=${groupId.value}`)
+  form.value.condition = parts.join(';')
+}
+
+const canSubmit = computed(() => {
+  if (!selectedEventId.value || !form.value.type) return false
+  if (form.value.type === TYPES.VOL_COUNT_OVER)
+    return /^n=\d+(;group_id=[^;]+)?$/i.test(form.value.condition)
+  if (form.value.type === TYPES.LOW_RATING_APPLIED)
+    return /^rating_lt=\d+(\.\d+)?$/i.test(form.value.condition)
+  if (form.value.type === TYPES.UNDERSTAFFED_TASK)
+    return /^min=\d+(;group_id=[^;]+)?$/i.test(form.value.condition)
+  return false
+})
+
+onMounted(async () => {
+  try {
+    const resp = await listEventsForUser(userId.value)
+    const events = Array.isArray(resp) ? resp : resp?.events
+    if (!events) throw new Error('no events')
+    eventOptions.value = events
+  } catch {
+    eventOptions.value = mockEventsForUser()
+  }
+  selectedEventId.value = eventOptions.value[0]?.id || ''
+  resetForm()
+  await reload()
+})
+
+watch(selectedEventId, () => {
+  resetForm()
+})
+
+function resetForm() {
+  editId.value = ''
+  form.value.type = TYPES.VOL_COUNT_OVER
+  n.value = 10
+  useGroup.value = false
+  groupId.value = ''
+  ratingLt.value = 3.5
+  minStaff.value = 2
+  syncVOL()
+  ok.value = ''
+  error.value = ''
+}
+
+// lista alertów (API -> fallback mock)
+async function reload() {
+  if (!selectedEventId.value) {
+    items.value = []
+    return
+  }
+  loading.value = true
+  error.value = ''
+  ok.value = ''
+  try {
+    const res = await listAlerts(selectedEventId.value)
+    const list = (Array.isArray(res) ? res : res?.alerts || []).filter(
+      (a) => a.user_id === userId.value,
+    )
+    items.value = list
+  } catch (e) {
+    console.warn('Alerts: using mock, reason:', e?.message || e)
+    items.value = listMock({ eventId: selectedEventId.value, userId: userId.value })
+  } finally {
+    loading.value = false
+  }
+}
+
+async function onSubmit() {
+  if (!canSubmit.value) return
+  loading.value = true
+  error.value = ''
+  ok.value = ''
+  const payload = {
+    user_id: userId.value,
+    event_id: selectedEventId.value,
+    type: form.value.type,
+    condition: form.value.condition,
+  }
+
+  try {
+    if (editId.value) {
+      try {
+        const saved = await updateAlert(selectedEventId.value, editId.value, payload)
+        applyUpdateLocal(saved)
+      } catch {
+        const saved = updateMock({ id: editId.value, patch: payload })
+        applyUpdateLocal(saved)
+      }
+      ok.value = 'Zapisano zmiany.'
+    } else {
+      try {
+        const created = await createAlert(selectedEventId.value, payload)
+        items.value = [created, ...items.value]
+      } catch {
+        const created = createMock({
+          eventId: selectedEventId.value,
+          userId: userId.value,
+          type: payload.type,
+          condition: payload.condition,
+        })
+        items.value = [created, ...items.value]
+      }
+      ok.value = 'Dodano alert.'
+    }
+    resetForm()
+  } catch (e) {
+    error.value = e?.message || 'Nie udało się zapisać.'
+  } finally {
+    loading.value = false
+  }
+}
+
+function applyUpdateLocal(saved) {
+  const i = items.value.findIndex((x) => x.id === saved.id)
+  if (i !== -1) items.value[i] = saved
+}
+
+function startEdit(a) {
+  editId.value = a.id
+  form.value.type = a.type
+  form.value.condition = a.condition || ''
+  if (a.type === TYPES.VOL_COUNT_OVER) {
+    const mN = /n=(\d+)/i.exec(a.condition || '')
+    const mG = /group_id=([^;]+)/i.exec(a.condition || '')
+    n.value = mN ? Number(mN[1]) : 10
+    useGroup.value = !!mG
+    groupId.value = mG ? mG[1] : ''
+    syncVOL()
+  } else if (a.type === TYPES.LOW_RATING_APPLIED) {
+    const m = /rating_lt=([\d.]+)/i.exec(a.condition || '')
+    ratingLt.value = m ? Number(m[1]) : 3.5
+    syncRATING()
+  } else if (a.type === TYPES.UNDERSTAFFED_TASK) {
+    const mMin = /min=(\d+)/i.exec(a.condition || '')
+    const mG = /group_id=([^;]+)/i.exec(a.condition || '')
+    minStaff.value = mMin ? Number(mMin[1]) : 2
+    useGroup.value = !!mG
+    groupId.value = mG ? mG[1] : ''
+    syncUNDER()
+  }
+}
+
+async function remove(a) {
+  if (!confirm('Usunąć ten alert?')) return
+  loading.value = true
+  error.value = ''
+  ok.value = ''
+  try {
+    try {
+      await deleteAlert(selectedEventId.value, a.id)
+    } catch {
+      deleteMock(a.id)
+    }
+    items.value = items.value.filter((x) => x.id !== a.id)
+    if (editId.value === a.id) resetForm()
+  } catch (e) {
+    error.value = e?.message || 'Nie udało się usunąć.'
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
+<style scoped lang="scss">
+.head {
+  margin-bottom: 0.75rem;
+  .muted {
+    color: $muted-color;
+  }
+}
+
+.card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.form .row,
+.card .row {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+.lbl {
+  font-weight: 600;
+}
+
+.stack {
+  display: grid;
+  gap: 0.25rem;
+}
+.inline {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.check {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.w-120 {
+  width: 120px;
+}
+
+.actions {
+  margin-top: 0.5rem;
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  .err {
+    color: $red-color;
+  }
+  .ok {
+    color: $blue-color;
+  }
+}
+
+.table-wrap {
+  overflow: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  th,
+  td {
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid $border-color;
+  }
+  thead th {
+    text-align: left;
+    background: $surface-hover;
+    border-top: 1px solid $border-color;
+  }
+  .num {
+    text-align: right;
+    white-space: nowrap;
+    width: 180px;
+  }
+}
+</style>
 
 
 ==== ./src\components\dashboard\Categories\OrgApplicationManagement.vue ====
@@ -2918,8 +3428,349 @@ async function seedAutoReply() {
 
 ==== ./src\components\dashboard\Categories\SudoEventVerification.vue ====
 <template>
-    Tutaj admin zatwierdza wydarzenia</br>
+  <div class="sudo-events">
+    <header class="head">
+      <h2>Weryfikacja wydarzeń</h2>
+      <p class="muted">
+        Lista zgłoszeń oczekujących na akceptację. Możesz podejrzeć szczegóły, a następnie
+        <strong>zaakceptować</strong> lub <strong>odrzucić</strong> wydarzenie.
+      </p>
+    </header>
+
+    <section v-if="!auth.isGovAdmin" class="card">
+      <p class="muted">Ta sekcja jest dostępna tylko dla roli: Admin rządowy.</p>
+    </section>
+
+    <section class="card" v-else>
+      <div class="card__head">
+        <h3>Oczekujące wydarzenia</h3>
+        <div class="actions">
+          <button class="btn" @click="reload" :disabled="loading">Odśwież</button>
+        </div>
+      </div>
+
+      <div v-if="loading" class="muted">Ładowanie…</div>
+      <div v-else-if="error" class="err">{{ error }}</div>
+      <template v-else>
+        <p v-if="items.length === 0" class="muted">Brak niezaakceptowanych wydarzeń.</p>
+
+        <ul v-else class="list">
+          <li v-for="ev in items" :key="ev.id" class="row">
+            <div class="left">
+              <div class="title">
+                <strong>{{ ev.name || 'Bez nazwy' }}</strong>
+                <span class="badge">UNCONFIRMED</span>
+              </div>
+              <div class="sub muted">
+                ID: {{ ev.id }} • instytucja: {{ ev.institution_id || '—' }} •
+                {{ d(ev.start_date) }} {{ t(ev.start_date) }} → {{ t(ev.end_date) }}
+              </div>
+            </div>
+
+            <div class="right">
+              <button class="btn" @click="toggle(ev.id)">
+                {{ opened.has(ev.id) ? 'Zwiń' : 'Szczegóły' }}
+              </button>
+              <button class="btn btn--primary" :disabled="actingId === ev.id" @click="accept(ev)">
+                {{ actingId === ev.id && actingType === 'accept' ? 'Zatwierdzanie…' : 'Akceptuj' }}
+              </button>
+              <button class="btn btn--danger" :disabled="actingId === ev.id" @click="reject(ev)">
+                {{ actingId === ev.id && actingType === 'reject' ? 'Odrzucanie…' : 'Odrzuć' }}
+              </button>
+            </div>
+
+            <div class="details" v-if="opened.has(ev.id)">
+              <div class="details__grid">
+                <div>
+                  <div class="kv">
+                    <span>Nazwa:</span><strong>{{ ev.name || '—' }}</strong>
+                  </div>
+                  <div class="kv">
+                    <span>Opis:</span
+                    ><strong>{{ ev.description?.trim() || '— brak opisu —' }}</strong>
+                  </div>
+                </div>
+                <div>
+                  <div class="kv">
+                    <span>Instytucja:</span><strong>{{ ev.institution_id || '—' }}</strong>
+                  </div>
+                  <div class="kv">
+                    <span>Daty:</span>
+                    <strong>{{ d(ev.start_date) }} {{ t(ev.start_date) }}</strong>
+                    <span class="muted"> → </span>
+                    <strong>{{ d(ev.end_date) }} {{ t(ev.end_date) }}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div class="groups" v-if="ev.groups?.length">
+                <div class="groups__head">Grupy ({{ ev.groups.length }})</div>
+                <ul class="groups__list">
+                  <li v-for="g in ev.groups" :key="g.id">
+                    <strong>{{ g.name || g.id }}</strong>
+                    <span v-if="g.tasks?.length" class="muted">
+                      • zadania: {{ g.tasks.length }}</span
+                    >
+                  </li>
+                </ul>
+              </div>
+              <div class="muted" v-else>Brak informacji o grupach.</div>
+            </div>
+          </li>
+        </ul>
+      </template>
+    </section>
+  </div>
 </template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth.js'
+import { listUnconfirmedEvents, confirmEvent, deleteEvent } from '@/api/event.js'
+
+const auth = useAuthStore()
+
+const items = ref([])
+const loading = ref(false)
+const error = ref('')
+const opened = ref(new Set())
+
+const actingId = ref('')
+const actingType = ref('') // 'accept' | 'reject'
+
+onMounted(reload)
+
+async function reload() {
+  loading.value = true
+  error.value = ''
+  try {
+    const res = await listUnconfirmedEvents()
+    // Backend może zwrócić tablicę lub obiekt { events: [...] }
+    const arr = Array.isArray(res) ? res : res?.events
+    if (!arr) throw new Error('Brak danych z serwera')
+    items.value = arr
+  } catch (e) {
+    console.warn('GET /event/unconfirmed -> fallback mock:', e?.message || e)
+    // Prosty fallback, żeby UI żył zanim powstanie backend
+    items.value = [
+      {
+        id: 'evt-mock-1',
+        name: 'Piknik Rodzinny',
+        description: 'Strefa gier i animacji dla dzieci.',
+        status: 'UNCONFIRMED',
+        institution_id: 'inst-7',
+        start_date: new Date(Date.now() + 3 * 3600e3).toISOString(),
+        end_date: new Date(Date.now() + 6 * 3600e3).toISOString(),
+        groups: [{ id: 'g-1', name: 'Animacje', tasks: [] }],
+      },
+      {
+        id: 'evt-mock-2',
+        name: 'Sadzenie drzew',
+        description: 'Akcja w parku miejskim.',
+        status: 'UNCONFIRMED',
+        institution_id: 'inst-4',
+        start_date: new Date(Date.now() + 86400e3).toISOString(),
+        end_date: new Date(Date.now() + 86400e3 + 4 * 3600e3).toISOString(),
+        groups: [],
+      },
+    ]
+  } finally {
+    loading.value = false
+  }
+}
+
+function d(iso) {
+  if (!iso) return '—'
+  const x = new Date(iso)
+  return x.toLocaleDateString()
+}
+function t(iso) {
+  if (!iso) return '—'
+  const x = new Date(iso)
+  return x.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+function toggle(id) {
+  const s = new Set(opened.value)
+  if (s.has(id)) s.delete(id)
+  else s.add(id)
+  opened.value = s
+}
+
+async function accept(ev) {
+  if (!confirm(`Zatwierdzić wydarzenie „${ev.name || ev.id}”?`)) return
+  actingId.value = ev.id
+  actingType.value = 'accept'
+  try {
+    try {
+      await confirmEvent(ev.id)
+    } catch (e) {
+      console.warn('POST /event/:id/confirm failed, removing locally. Reason:', e?.message || e)
+      // fallback — traktujemy jak zaakceptowane i usuwamy z listy
+    }
+    items.value = items.value.filter((x) => x.id !== ev.id)
+    opened.value.delete(ev.id)
+  } catch (e) {
+    alert(e?.message || 'Nie udało się zatwierdzić.')
+  } finally {
+    actingId.value = ''
+    actingType.value = ''
+  }
+}
+
+async function reject(ev) {
+  if (
+    !confirm(
+      `Odrzucić wydarzenie „${ev.name || ev.id}”? Operacja jest nieodwracalna (usunie zgłoszenie).`,
+    )
+  )
+    return
+  actingId.value = ev.id
+  actingType.value = 'reject'
+  try {
+    try {
+      await deleteEvent(ev.id)
+    } catch (e) {
+      console.warn('DELETE /event/:id failed, removing locally. Reason:', e?.message || e)
+      // fallback — usuwamy lokalnie
+    }
+    items.value = items.value.filter((x) => x.id !== ev.id)
+    opened.value.delete(ev.id)
+  } catch (e) {
+    alert(e?.message || 'Nie udało się odrzucić.')
+  } finally {
+    actingId.value = ''
+    actingType.value = ''
+  }
+}
+</script>
+
+<style scoped lang="scss">
+.head {
+  margin-bottom: 0.75rem;
+  .muted {
+    color: $muted-color;
+  }
+}
+
+.card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.actions {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.row {
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  background: $surface;
+  padding: 0.6rem 0.6rem;
+  & + .row {
+    margin-top: 0.5rem;
+  }
+
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.6rem;
+}
+
+.left {
+  min-width: 0;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  strong {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+.sub {
+  font-size: 0.92rem;
+}
+
+.right {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: $radius-sm;
+  border: 1px solid $border-color;
+  background: $surface-hover;
+  color: $muted-color;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.details {
+  grid-column: 1 / -1;
+  margin-top: 0.5rem;
+  border-top: 1px dashed $border-color;
+  padding-top: 0.5rem;
+}
+.details__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 0.4rem;
+  align-items: baseline;
+  margin: 0.15rem 0;
+
+  span {
+    color: $muted-color;
+  }
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.groups {
+  margin-top: 0.5rem;
+}
+.groups__head {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+.groups__list {
+  margin: 0.25rem 0 0 1rem;
+  padding: 0;
+  list-style: disc;
+  color: $muted-color;
+}
+
+.err {
+  color: $red-color;
+}
+</style>
 
 
 ==== ./src\components\dashboard\Categories\SudoOrgVerification.vue ====
@@ -2930,8 +3781,393 @@ async function seedAutoReply() {
 
 ==== ./src\components\dashboard\Categories\VolNotifSettings.vue ====
 <template>
-    Tutaj wolontariusz decyduje, jakie powiadomienia chce otrzymywać.</br>
+  <div class="notif">
+    <header class="head">
+      <h2>Ustawienia powiadomień</h2>
+      <p class="muted">
+        Wybierz, o czym chcesz być informowany(a). Dostępne tylko dla roli Wolontariusz.
+      </p>
+    </header>
+
+    <section class="card">
+      <div class="card__head">
+        <h3>{{ editId ? 'Edytuj powiadomienie' : 'Dodaj powiadomienie' }}</h3>
+        <span v-if="loading" class="muted">Zapisywanie…</span>
+      </div>
+
+      <div class="form">
+        <div class="row">
+          <label class="lbl">Rodzaj</label>
+          <select class="select" v-model="form.type" :disabled="!!editId">
+            <option disabled value="">— wybierz —</option>
+            <option :value="TYPES.INCOMING_EVENT">Nadchodzące wydarzenie</option>
+            <option :value="TYPES.TASK_APPROVED">Zatwierdzenie do zadania</option>
+            <option :value="TYPES.OPINION_ISSUED">Wystawienie opinii</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label class="lbl">Warunek</label>
+
+          <template v-if="form.type === TYPES.INCOMING_EVENT">
+            <div class="stack">
+              <div class="inline">
+                <input
+                  class="input w-120"
+                  type="number"
+                  min="0"
+                  step="1"
+                  v-model.number="days"
+                  @input="syncConditionFromDays"
+                />
+                <span class="muted">dni do eventu</span>
+              </div>
+              <small class="muted">Powiadom, gdy do wydarzenia zostaje X dni.</small>
+            </div>
+          </template>
+
+          <template v-else-if="form.type">
+            <div class="stack">
+              <label class="check">
+                <input type="checkbox" v-model="boolTrue" @change="syncConditionFromBool" />
+                Aktywne (powiadamiaj)
+              </label>
+              <small class="muted">Warunek: zawsze, gdy zajdzie zdarzenie.</small>
+            </div>
+          </template>
+
+          <template v-else>
+            <span class="muted">Najpierw wybierz rodzaj.</span>
+          </template>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn--primary" :disabled="!canSubmit || loading" @click="onSubmit">
+            {{ editId ? 'Zapisz zmiany' : 'Dodaj' }}
+          </button>
+          <button class="btn" v-if="editId" :disabled="loading" @click="resetForm">Anuluj</button>
+          <span class="err" v-if="error">{{ error }}</span>
+          <span class="ok" v-if="ok">{{ ok }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card__head">
+        <h3>Twoje powiadomienia</h3>
+        <button class="btn" @click="reload" :disabled="loading">Odśwież</button>
+      </div>
+
+      <template v-if="items.length">
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Rodzaj</th>
+                <th>Warunek</th>
+                <th class="num">Akcje</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="n in items" :key="n.id">
+                <td>{{ labelOf(n.type) }}</td>
+                <td>{{ humanCondition(n) }}</td>
+                <td class="num">
+                  <button class="btn" @click="startEdit(n)">Edytuj</button>
+                  <button class="btn btn--danger" @click="remove(n)" :disabled="loading">
+                    Usuń
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
+      <p class="muted" v-else>Nie masz jeszcze żadnych ustawień.</p>
+    </section>
+  </div>
 </template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth.js'
+import {
+  listNotifications,
+  createNotification,
+  updateNotification,
+  deleteNotification,
+} from '@/api/notification.js'
+import { listMock, createMock, updateMock, deleteMock } from '@/mocks/notifications.js'
+
+const auth = useAuthStore()
+const userId = computed(() => auth.user?.id || 'u-1')
+
+const TYPES = {
+  INCOMING_EVENT: 'INCOMING_EVENT',
+  TASK_APPROVED: 'TASK_APPROVED',
+  OPINION_ISSUED: 'OPINION_ISSUED',
+}
+
+const items = ref([])
+const loading = ref(false)
+const error = ref('')
+const ok = ref('')
+
+const form = ref({ type: '', condition: '' })
+const editId = ref('')
+
+const days = ref(3) // dla INCOMING_EVENT
+const boolTrue = ref(true)
+
+function labelOf(type) {
+  switch (type) {
+    case TYPES.INCOMING_EVENT:
+      return 'Nadchodzące wydarzenie'
+    case TYPES.TASK_APPROVED:
+      return 'Zatwierdzenie do zadania'
+    case TYPES.OPINION_ISSUED:
+      return 'Wystawienie opinii'
+    default:
+      return type || '—'
+  }
+}
+function humanCondition(n) {
+  if (n.type === TYPES.INCOMING_EVENT) {
+    const m = /days=(\d+)/i.exec(n.condition || '')
+    return m ? `gdy do eventu ≤ ${m[1]} dni` : n.condition || '—'
+  }
+  return n.condition === 'true' ? 'aktywne' : n.condition || '—'
+}
+
+function syncConditionFromDays() {
+  const v = Number.isFinite(days.value) && days.value >= 0 ? Math.floor(days.value) : 0
+  form.value.condition = `days=${v}`
+}
+function syncConditionFromBool() {
+  form.value.condition = boolTrue.value ? 'true' : 'false'
+}
+
+const canSubmit = computed(() => {
+  if (!form.value.type) return false
+  if (form.value.type === TYPES.INCOMING_EVENT)
+    return /^\s*days=\d+\s*$/i.test(form.value.condition || '')
+  return form.value.condition === 'true'
+})
+
+// --- ładowanie listy (API -> fallback mock) ---
+async function reload() {
+  loading.value = true
+  error.value = ''
+  ok.value = ''
+  try {
+    const res = await listNotifications(userId.value)
+    items.value = Array.isArray(res) ? res : res?.notifications || []
+  } catch (e) {
+    // fallback do mocków
+    console.warn('Notifications: using mock, reason:', e?.message || e)
+    items.value = listMock(userId.value)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  form.value.type = TYPES.INCOMING_EVENT
+  syncConditionFromDays()
+  reload()
+})
+
+async function onSubmit() {
+  if (!canSubmit.value) return
+  loading.value = true
+  error.value = ''
+  ok.value = ''
+
+  try {
+    if (editId.value) {
+      try {
+        // real API
+        const saved = await updateNotification(userId.value, editId.value, {
+          type: form.value.type,
+          condition: form.value.condition,
+        })
+        applyUpdateLocal(saved)
+      } catch (e) {
+        // mock
+        const saved = updateMock({
+          id: editId.value,
+          patch: {
+            type: form.value.type,
+            condition: form.value.condition,
+          },
+        })
+        applyUpdateLocal(saved)
+      }
+      ok.value = 'Zapisano zmiany.'
+    } else {
+      try {
+        // real API
+        const created = await createNotification(userId.value, {
+          type: form.value.type,
+          condition: form.value.condition,
+        })
+        items.value = [created, ...items.value]
+      } catch (e) {
+        // mock
+        const created = createMock({
+          userId: userId.value,
+          type: form.value.type,
+          condition: form.value.condition,
+        })
+        items.value = [created, ...items.value]
+      }
+      ok.value = 'Dodano powiadomienie.'
+    }
+    resetForm()
+  } catch (e) {
+    error.value = e?.message || 'Nie udało się zapisać.'
+  } finally {
+    loading.value = false
+  }
+}
+
+function applyUpdateLocal(saved) {
+  const i = items.value.findIndex((x) => x.id === saved.id)
+  if (i !== -1) items.value[i] = saved
+}
+
+function startEdit(n) {
+  editId.value = n.id
+  form.value.type = n.type
+  form.value.condition = n.condition || ''
+  if (n.type === TYPES.INCOMING_EVENT) {
+    const m = /days=(\d+)/i.exec(form.value.condition)
+    days.value = m ? Number(m[1]) : 3
+  } else {
+    boolTrue.value = form.value.condition === 'true'
+  }
+}
+
+function resetForm() {
+  editId.value = ''
+  form.value.type = TYPES.INCOMING_EVENT
+  days.value = 3
+  syncConditionFromDays()
+  boolTrue.value = true
+  ok.value = ''
+  error.value = ''
+}
+
+async function remove(n) {
+  if (!confirm('Usunąć to ustawienie?')) return
+  loading.value = true
+  error.value = ''
+  ok.value = ''
+  try {
+    try {
+      await deleteNotification(userId.value, n.id)
+    } catch {
+      deleteMock(n.id)
+    }
+    items.value = items.value.filter((x) => x.id !== n.id)
+    if (editId.value === n.id) resetForm()
+  } catch (e) {
+    error.value = e?.message || 'Nie udało się usunąć.'
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
+<style scoped lang="scss">
+.head {
+  margin-bottom: 0.75rem;
+  .muted {
+    color: $muted-color;
+  }
+}
+
+.card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.form .row {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 0.75rem;
+  align-items: center;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lbl {
+  font-weight: 600;
+}
+
+.stack {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.inline {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.w-120 {
+  width: 120px;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.actions {
+  margin-top: 0.5rem;
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+
+  .err {
+    color: $red-color;
+  }
+  .ok {
+    color: $blue-color;
+  }
+}
+
+.table-wrap {
+  overflow: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid $border-color;
+  }
+  thead th {
+    text-align: left;
+    background: $surface-hover;
+    border-top: 1px solid $border-color;
+  }
+  .num {
+    text-align: right;
+    white-space: nowrap;
+    width: 180px;
+  }
+}
+</style>
 
 
 ==== ./src\components\structure\Footer.vue ====
@@ -3185,6 +4421,58 @@ function onChange(e) {
   font-size: 0.9rem;
 }
 </style>
+
+
+==== ./src\mocks\alerts.js ====
+// frontend/src/mocks/alerts.js
+const LS_KEY = 'mock_alerts_v1'
+
+// Struktura: { [id]: { id, user_id, event_id, type, condition } }
+
+function load() {
+  try {
+    const raw = localStorage.getItem(LS_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+function save(db) {
+  localStorage.setItem(LS_KEY, JSON.stringify(db))
+}
+function nextId() {
+  return 'a-' + Math.random().toString(36).slice(2, 10)
+}
+
+export function listMock({ eventId, userId }) {
+  const db = load()
+  return Object.values(db).filter(
+    (a) => (!eventId || a.event_id === eventId) && (!userId || a.user_id === userId),
+  )
+}
+
+export function createMock({ eventId, userId, type, condition }) {
+  const db = load()
+  const id = nextId()
+  const rec = { id, user_id: userId, event_id: eventId, type, condition }
+  db[id] = rec
+  save(db)
+  return JSON.parse(JSON.stringify(rec))
+}
+
+export function updateMock({ id, patch }) {
+  const db = load()
+  if (!db[id]) throw new Error('Not found (mock)')
+  db[id] = { ...db[id], ...patch }
+  save(db)
+  return JSON.parse(JSON.stringify(db[id]))
+}
+
+export function deleteMock(id) {
+  const db = load()
+  delete db[id]
+  save(db)
+}
 
 
 ==== ./src\mocks\certificates.js ====
@@ -3613,6 +4901,54 @@ export function mockGroupsForCoordinator(coordinatorId = 'u-1') {
     }
   }
   return list
+}
+
+
+==== ./src\mocks\notifications.js ====
+// frontend/src/mocks/notifications.js
+const LS_KEY = 'mock_notifications_v1'
+
+function load() {
+  try {
+    const raw = localStorage.getItem(LS_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+function save(db) {
+  localStorage.setItem(LS_KEY, JSON.stringify(db))
+}
+function nextId() {
+  return 'n-' + Math.random().toString(36).slice(2, 10)
+}
+
+export function listMock(userId) {
+  const db = load()
+  return Object.values(db).filter((n) => n.user_id === userId)
+}
+
+export function createMock({ userId, type, condition }) {
+  const db = load()
+  const id = nextId()
+  const rec = { id, user_id: userId, type, condition }
+  db[id] = rec
+  save(db)
+  return JSON.parse(JSON.stringify(rec))
+}
+
+export function updateMock({ id, patch }) {
+  const db = load()
+  if (!db[id]) throw new Error('Not found (mock)')
+  db[id] = { ...db[id], ...patch }
+  save(db)
+  return JSON.parse(JSON.stringify(db[id]))
+}
+
+export function deleteMock(id) {
+  const db = load()
+  delete db[id]
+  save(db)
 }
 
 
