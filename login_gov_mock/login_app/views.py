@@ -26,8 +26,7 @@ def login_view(request):
             if user is None:
                 return JsonResponse({'error': 'Invalid credentials'}, status=401)
             
-            # TODO: make a correct redirect to main backend
-            return JsonResponse({'message': "Sukces a teraz wypierdalaj not implemented"}, status=301)
+            return JsonResponse({'user_id': user.id}, status=301)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
     else:
@@ -117,7 +116,10 @@ def register_page(request):
             print(response.status_code)
             if response.status_code == 201:
                 message = f"Zarejestrowano! ID użytkownika: {response_data.get('user_id')}"
-                url_to_redirect = get_attach_token_url()
+                user = User.objects.filter(id=id).first()
+                if user is None:
+                    return JsonResponse({'error': 'Invalid id'}, status=401)
+                url_to_redirect = get_attach_token_url(user)
                 return redirect(url_to_redirect)
             else:
                 message = response_data.get('error', 'Błąd rejestracji')
@@ -154,9 +156,10 @@ def login_page(request):
             print(response_data)
             print(response.status_code)
             if response.status_code == 301:
-                message = f"Zalogowano! (przekierowanie niezaimplementowane)"
-                # getting url from environment variable
-                url_to_redirect = get_attach_token_url()
+                user = User.objects.filter(id = response_data.user_id).first()
+                if user is None:
+                    return HttpResponse('Fuck You', content_type="text/plain")
+                url_to_redirect = get_attach_token_url(user)
                 return redirect(url_to_redirect)
             else:
                 message = response_data.get('error', 'Błąd logowania')
