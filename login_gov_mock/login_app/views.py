@@ -12,6 +12,8 @@ from .helpers import get_attach_token_url
 from django.shortcuts import render
 from django.http import HttpRequest
 
+user_tokens = {}
+
 @csrf_exempt 
 def login_view(request):
     if request.method == 'GET':
@@ -80,8 +82,7 @@ def register_view(request):
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
     else:
         return JsonResponse({'error': 'Only POST method allowed'}, status=400)
-
-
+    
 
 @csrf_exempt
 def register_page(request):
@@ -120,7 +121,8 @@ def register_page(request):
                 user = User.objects.filter(id=response_data.get('user_id')).first()
                 if user is None:
                     return JsonResponse({'error': 'Invalid id'}, status=401)
-                url_to_redirect = get_attach_token_url(user)
+                url_to_redirect, access_token = get_attach_token_url(user)
+                user_tokens[access_token] = user.pesel # mock of governmental login, (this would be implemented outside the app, but for easy user id control we set the user id to PESEL)
                 return redirect(url_to_redirect)
             else:
                 message = response_data.get('error', 'Błąd rejestracji')
@@ -184,3 +186,11 @@ def user_data_by_id(request):
         # dopisać email i telefon
         return JsonResponse({"id":user.id, "name": user.name, "surname": user.surname, "pesel": user.pesel}, status=200)
     return JsonResponse({"error: get only"}, status=402)
+
+@csrf_exempt
+def get_user_id_from_token(request):
+    if request.method == 'POST':
+        access_token = request.POST.get('access_token')
+        user_id = user_tokens[access_token]
+        return JsonResponse({"user_id": user_id}, status=200)
+    return JsonResponse({"error": "wrong method"}, status=403)
