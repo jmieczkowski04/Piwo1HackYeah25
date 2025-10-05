@@ -4,9 +4,11 @@ services:
     ports:
       - "8080:8080" # api.krakow.pl
       - "3000:3000" # login.gov.pl
+      - "80:80" # frontend
     depends_on:
       - login_gov_mock
       - volcon_api
+      - frontend
     networks:
       - volcon-network
   login_gov_mock:
@@ -17,6 +19,10 @@ services:
       - MAIN_BACKEND_TOKEN_ATTACH_URL=http://localhost:8080/volcon/attach_token/
   volcon_api:
     build: volcon_api
+    networks:
+      - volcon-network
+  frontend:
+    build: frontend
     networks:
       - volcon-network
 
