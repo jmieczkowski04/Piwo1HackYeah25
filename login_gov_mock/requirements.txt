@@ -4,7 +4,7 @@ attrs==25.3.0
 beautifulsoup4==4.7.1
 cached-property==2.0.1
 certifi==2025.8.3
-charset-normalizer==3.4.3
+charset-normalizer==3.4.3 
 defusedxml==0.7.1
 Django==5.2.7
 djangorestframework==3.16.1
