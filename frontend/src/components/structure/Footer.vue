@@ -4,7 +4,7 @@
       <!-- Brand -->
       <router-link to="/" class="brand" aria-label="Przejdź do strony głównej">
         <img class="brand__logo" src="@/assets/logo.png" alt="" />
-        <span class="brand__name">Wolontariat</span>
+        <span class="brand__name">VolCon</span>
       </router-link>
 
       <!-- Nawigacja skrótowa -->
@@ -17,9 +17,9 @@
       <!-- Kontakt / info -->
       <div class="meta">
         <p class="meta__line">
-          Masz pytania? <a href="mailto:kontakt@wolontariat.pl">kontakt@wolontariat.pl</a>
+          Masz pytania? <a href="mailto:kontakt@VolCon.pl">kontakt@VolCon.pl</a>
         </p>
-        <p class="meta__line">© {{ year }} Wolontariat — wszystkie prawa zastrzeżone</p>
+        <p class="meta__line">© {{ year }} VolCon — wszystkie prawa zastrzeżone</p>
       </div>
     </div>
   </footer>
