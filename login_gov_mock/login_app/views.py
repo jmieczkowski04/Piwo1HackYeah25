@@ -165,3 +165,17 @@ def login_page(request):
         except Exception:
             message = 'Błąd logowania.'
     return render(request, 'login.html', {'message': message})
+
+@csrf_exempt
+def user_data_by_id(request):
+    id = None
+    if request.method == 'GET':
+        id = request.GET.get('id')
+        if id is None:
+            return JsonResponse({'error': 'Give id'}, status=401)
+        user = User.objects.filter(id=id).first()
+        if user is None:
+            return JsonResponse({'error': 'Invalid id'}, status=401)
+        # dopisać email i telefon
+        return JsonResponse({"id":user.id, "name": user.name, "surname": user.surname, "pesel": user.pesel}, status=200)
+    return JsonResponse({"error: get only"}, status=402)
