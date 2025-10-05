@@ -10,7 +10,7 @@ def save_files_content_to_txt(root_folder, output_file, ignore_dirs=None):
             dirs[:] = [d for d in dirs if d not in ignore_dirs]
 
             for file in files:
-                if file.endswith('.vue') or file.endswith('.txt') or file.endswith('.json') or file.endswith('.js') or file.endswith('.scss'):
+                if file.endswith('.vue') or file.endswith('.txt') or file.endswith('.json') or file.endswith('.js') or file.endswith('.scss') or file.endswith('.env'):
                     file_path = os.path.join(root, file)
                     try:
                         with open(file_path, 'r', encoding='utf-8') as infile:

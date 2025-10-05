@@ -1,6 +1,10 @@
 ==== ./output.txt ====
 
 
+==== ./frontend\.env ====
+# VITE_API_URL=http://localhost:8080
+
+
 ==== ./frontend\.prettierrc.json ====
 {
   "$schema": "https://json.schemastore.org/prettierrc",
@@ -391,6 +395,19 @@ api.interceptors.response.use(
   },
 )
 
+api.interceptors.response.use(
+  (res) => res.data,
+  (error) => {
+    const status = error?.response?.status
+    if (status === 401) {
+      localStorage.removeItem('token')
+    }
+    const message =
+      error?.response?.data?.message || error?.message || `${status || ''} request error`
+    return Promise.reject(new Error(message))
+  },
+)
+
 export default api
 
 
@@ -667,7 +684,7 @@ $red-color: #cc3960;
       <li>
         <router-link to="/dashboard/panel">Panel główny</router-link>
       </li>
-      <li>
+      <li v-if="auth.isCoordinator">
         <router-link to="/dashboard/user">Dane użytkownika</router-link>
       </li>
       <li>
@@ -684,32 +701,39 @@ $red-color: #cc3960;
         <router-link to="/dashboard/contact">Kontakt</router-link>
       </li>
       <!--  -->
-      <li>
+      <li v-if="auth.isOrgAdmin || auth.isGovAdmin">
         <router-link to="/dashboard/advert-publication">Publikacja ogłoszeń</router-link>
       </li>
-      <li>
+      <li v-if="auth.isOrgAdmin">
         <router-link to="/dashboard/alert-settings">Ustawienia alertów</router-link>
       </li>
-      <li>
+      <li v-if="auth.isOrgAdmin || auth.isGovAdmin">
         <router-link to="/dashboard/application-management">Zarządzanie zgłoszeniami</router-link>
       </li>
-      <li>
+      <li v-if="auth.isOrgAdmin || auth.isGovAdmin">
         <router-link to="/dashboard/opinions">Opinie</router-link>
       </li>
-      <!--  -->
-      <li>
+      <!-- TYLKO dla pełnych adminów rządowych -->
+      <li v-if="auth.isGovAdmin">
         <router-link to="/dashboard/institution-verification">Weryfikacja organizacji</router-link>
       </li>
-      <li>
+
+      <li v-if="auth.isGovAdmin">
         <router-link to="/dashboard/event-verification">Weryfikacja wydarzeń</router-link>
       </li>
+
       <!--  -->
-      <li>
+      <li v-if="auth.isVolunteer">
         <router-link to="/dashboard/notification-settings">Ustawienia powiadomień</router-link>
       </li>
     </ul>
   </div>
 </template>
+
+<script setup>
+import { useAuthStore } from '@/stores/auth.js'
+const auth = useAuthStore()
+</script>
 
 
 ==== ./frontend\src\components\dashboard\Categories\AllCalendar.vue ====
@@ -822,26 +846,59 @@ footer {
 ==== ./frontend\src\components\structure\Navbar.vue ====
 <template>
   <nav>
-    <router-link to="/">Ogłoszenia</router-link>
-    <router-link to="/login">Logowanie</router-link>
-    <router-link to="/dashboard">Panel</router-link>
+    <div class="left">
+      <router-link to="/">Ogłoszenia</router-link>
+      <router-link to="/login">Logowanie</router-link>
+      <router-link to="/dashboard">Panel</router-link>
+    </div>
+
+    <div class="right" v-if="auth.rolesAvailable.length">
+      <!-- gdy jest więcej niż 1 rola: select do przełączania -->
+      <label v-if="auth.rolesAvailable.length > 1" class="role-switch">
+        Rola:
+        <select :value="auth.currentRole" @change="onChange">
+          <option v-for="r in auth.rolesAvailable" :key="r" :value="r">
+            {{ auth.ROLE_LABEL[r] || r }}
+          </option>
+        </select>
+      </label>
+
+      <!-- gdy jest tylko jedna rola: pokazujemy ją jako tekst -->
+      <span v-else class="role-badge">
+        {{ auth.ROLE_LABEL[auth.currentRole] || auth.currentRole }}
+      </span>
+    </div>
   </nav>
 </template>
 
-<script setup></script>
+<script setup>
+import { useAuthStore } from '@/stores/auth.js'
+
+const auth = useAuthStore()
+function onChange(e) {
+  auth.setRole(e.target.value)
+}
+</script>
 
 <style scoped lang="scss">
 nav {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
+  align-items: center;
   padding: 1rem 0;
+}
+
+.left,
+.right {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
 }
 
 nav a {
   text-decoration: none;
   padding: 0.5rem 1rem;
 }
-
 nav a:hover {
   color: $blue-color;
 }
@@ -849,32 +906,18 @@ nav a.router-link-exact-active {
   font-weight: bold;
   color: $blue-color;
 }
-</style>
 
-
-==== ./frontend\src\composables\useUser.js ====
-import { ref } from 'vue'
-import { getMe } from '@/api/user.js'
-
-export function useUser() {
-  const me = ref(null)
-  const loading = ref(false)
-  const error = ref(null)
-
-  async function fetchMe() {
-    loading.value = true
-    error.value = null
-    try {
-      me.value = await getMe()
-    } catch (e) {
-      error.value = e.message || 'Błąd'
-    } finally {
-      loading.value = false
-    }
-  }
-
-  return { me, loading, error, fetchMe }
+.role-switch select {
+  margin-left: 0.5rem;
+  padding: 0.25rem 0.5rem;
 }
+.role-badge {
+  padding: 0.25rem 0.5rem;
+  background: $background-dark;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+}
+</style>
 
 
 ==== ./frontend\src\router\index.js ====
@@ -979,21 +1022,73 @@ const router = createRouter({
   ],
 })
 
+router.beforeEach((to) => {
+  const token = localStorage.getItem('token')
+  if (to.meta.requiresAuth && !token) {
+    //return { name: 'login' }
+    console.log('No token found.')
+  }
+})
+
 export default router
 
 
-==== ./frontend\src\stores\counter.js ====
-import { ref, computed } from 'vue'
+==== ./frontend\src\stores\auth.js ====
 import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
 
-export const useCounterStore = defineStore('counter', () => {
-  const count = ref(0)
-  const doubleCount = computed(() => count.value * 2)
-  function increment() {
-    count.value++
+export const ROLE = {
+  VOLUNTEER: 'VOLUNTEER',
+  COORDINATOR: 'COORDINATOR',
+  ORG_ADMIN: 'ORG_ADMIN',
+  GOV_ADMIN: 'GOV_ADMIN',
+}
+
+export const ROLE_LABEL = {
+  [ROLE.VOLUNTEER]: 'Wolontariusz',
+  [ROLE.COORDINATOR]: 'Koordynator',
+  [ROLE.ORG_ADMIN]: 'Admin organizacji',
+  [ROLE.GOV_ADMIN]: 'Admin rządowy',
+}
+
+export const useAuthStore = defineStore('auth', () => {
+  const user = ref(null)
+  const rolesAvailable = ref([])
+  const currentRole = ref(null)
+
+  function setAuthFromBackend({ user: u, roles }) {
+    user.value = u || null
+    const r = Array.isArray(roles) ? roles : roles ? [roles] : []
+    rolesAvailable.value = r
+    currentRole.value = r[0] || null
   }
 
-  return { count, doubleCount, increment }
+  function setRole(role) {
+    if (rolesAvailable.value.includes(role)) currentRole.value = role
+  }
+
+  const isGovAdmin = computed(() => currentRole.value === ROLE.GOV_ADMIN)
+  const isOrgAdmin = computed(() => currentRole.value === ROLE.ORG_ADMIN)
+  const isCoordinator = computed(() => currentRole.value === ROLE.COORDINATOR)
+  const isVolunteer = computed(() => currentRole.value === ROLE.VOLUNTEER)
+
+  return {
+    // state
+    user,
+    rolesAvailable,
+    currentRole,
+    // labels/enums
+    ROLE,
+    ROLE_LABEL,
+    // actions
+    setAuthFromBackend,
+    setRole,
+    // getters
+    isGovAdmin,
+    isOrgAdmin,
+    isCoordinator,
+    isVolunteer,
+  }
 })
 
 
@@ -1034,14 +1129,72 @@ import SettingsBar from '@/components/dashboard/SettingsBar.vue'
 
 ==== ./frontend\src\views\LoginPage.vue ====
 <template>
-  <div>
-    <a href="/">Zaloguj się!</a>
+  <div class="login">
+    <h2>Testowy login</h2>
+    <p>Po kliknięciu poniżej dostaniesz wszystkie 4 role do wyboru w nawigacji.</p>
+
+    <button class="btn" @click="loginTest" :disabled="loading">
+      {{ loading ? 'Logowanie…' : 'Zaloguj testowo' }}
+    </button>
+
+    <div v-if="preview.length" class="preview">
+      <strong>Załadowane role:</strong>
+      <ul>
+        <li v-for="r in preview" :key="r">{{ auth.ROLE_LABEL[r] || r }}</li>
+      </ul>
+      <small>Teraz możesz przełączyć rolę w prawym górnym rogu (Navbar).</small>
+    </div>
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore, ROLE } from '@/stores/auth.js'
 
-<style></style>
+const router = useRouter()
+const auth = useAuthStore()
+const loading = ref(false)
+const preview = ref([])
+
+async function loginTest() {
+  loading.value = true
+  try {
+    const fakeResponse = {
+      user: { id: 'u-1', name: 'Test User' },
+      roles: [ROLE.VOLUNTEER, ROLE.COORDINATOR, ROLE.ORG_ADMIN, ROLE.GOV_ADMIN],
+    }
+
+    auth.setAuthFromBackend(fakeResponse)
+    preview.value = fakeResponse.roles
+    localStorage.setItem('token', 'fake-token')
+
+    router.push({ name: 'dashboard' })
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
+<style scoped lang="scss">
+.login {
+  max-width: 520px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: $background-dark;
+  border-radius: 12px;
+}
+.btn {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.preview {
+  margin-top: 1rem;
+}
+</style>
 
 
 ==== ./frontend\src\views\MainView.vue ====

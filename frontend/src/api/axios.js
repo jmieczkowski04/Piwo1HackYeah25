@@ -27,4 +27,17 @@ api.interceptors.response.use(
   },
 )
 
+api.interceptors.response.use(
+  (res) => res.data,
+  (error) => {
+    const status = error?.response?.status
+    if (status === 401) {
+      localStorage.removeItem('token')
+    }
+    const message =
+      error?.response?.data?.message || error?.message || `${status || ''} request error`
+    return Promise.reject(new Error(message))
+  },
+)
+
 export default api
