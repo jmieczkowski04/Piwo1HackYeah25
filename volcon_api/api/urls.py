@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import attach_token_view
+from .views import attach_token_view, check_token
 from .user_requests import get_user_data, get_all_users, get_set_user_coordinates
 
 urlpatterns = [
@@ -8,4 +8,5 @@ urlpatterns = [
     path('user/', get_all_users, name='user_detail'),
     path('user/<int:id>/', get_user_data, name='user_detail'),
     path('user/<int:id>/localization', get_set_user_coordinates, name='user_detail'),
+    path('check/token', check_token, name='check_token')
 ]
