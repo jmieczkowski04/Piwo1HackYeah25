@@ -83,11 +83,8 @@ def register_view(request):
 
 @csrf_exempt
 def register_page(request):
-    print('siur1', flush=True)
     message = None
-    print('siur2', flush=True)
     if request.method == 'POST':
-        print('siur3', flush=True)
         # Pobierz dane z formularza
         data = {
             'login': request.POST.get('login'),
@@ -106,17 +103,10 @@ def register_page(request):
                 self._body = json.dumps(data).encode('utf-8')
             @property
             def body(self):
-                return self._body
-            
-        
+                return self._body        
 
         dummy_request = DummyRequest(data)
-
-        print(dummy_request.body)
-
         response = register_view(dummy_request)
-
-        print(response)
 
         try:
             response_data = json.loads(response.content)
@@ -131,5 +121,41 @@ def register_page(request):
             
         except Exception:
             message = 'Błąd rejestracji.'
-    print('siur4')
     return render(request, 'register.html', {'message': message})
+
+@csrf_exempt
+def login_page(request):
+    message = None
+    if request.method == 'POST':
+        # Pobierz dane z formularza
+        data = {
+            'login': request.POST.get('login'),
+            'password': request.POST.get('password'),
+        }
+        # Pakowanie do JSON i wysłanie do login_view
+        class DummyRequest(HttpRequest):
+            def __init__(self, data):
+                super().__init__()
+                self.method = 'GET'
+                self._body = json.dumps(data).encode('utf-8')
+            @property
+            def body(self):
+                return self._body        
+
+        dummy_request = DummyRequest(data)
+        response = login_view(dummy_request)
+
+        try:
+            response_data = json.loads(response.content)
+            print(response_data)
+            print(response.status_code)
+            if response.status_code == 301:
+                message = f"Zalogowano! (przekierowanie niezaimplementowane)"
+                return HttpResponse(message, content_type="text/plain")
+            else:
+                message = response_data.get('error', 'Błąd logowania')
+                return HttpResponse(message, content_type="text/plain")
+            
+        except Exception:
+            message = 'Błąd logowania.'
+    return render(request, 'login.html', {'message': message})

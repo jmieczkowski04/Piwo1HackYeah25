@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Rejestracja</title>
+    <title>Logowanie</title>
     <style>
         body {
             background: #f4f4f4;
@@ -12,7 +12,7 @@
             align-items: center;
             height: 100vh;
         }
-        .register-container {
+        .login-container {
             background: #fff;
             padding: 32px 24px;
             border-radius: 10px;
@@ -30,8 +30,7 @@
             color: #444;
         }
         input[type="text"],
-        input[type="password"],
-        input[type="email"] {
+        input[type="password"] {
             width: 100%;
             padding: 8px 10px;
             margin-bottom: 16px;
@@ -48,7 +47,6 @@
             border-radius: 5px;
             font-size: 16px;
             cursor: pointer;
-            /* transition: background 0.2s; */
         }
         button:hover {
             background: #0056b3;
@@ -56,9 +54,9 @@
     </style>
 </head>
 <body>
-    <div class="register-container">
-        <h2>Rejestracja</h2>
-        <form method="post" action=""> <!-- api/register_page/ -->
+    <div class="login-container">
+        <h2>Logowanie</h2>
+        <form method="post" action=""> <!-- /login/ -->
             {% csrf_token %}
             <label for="login">Login</label>
             <input type="text" id="login" name="login" required>
@@ -66,23 +64,11 @@
             <label for="password">Hasło</label>
             <input type="password" id="password" name="password" required>
 
-            <label for="name">Imię</label>
-            <input type="text" id="name" name="name" required>
-
-            <label for="surname">Nazwisko</label>
-            <input type="text" id="surname" name="surname" required>
-
-            <label for="pesel">PESEL</label>
-            <input type="text" id="pesel" name="pesel" required>
-
-            <label for="email">E-mail</label>
-            <input type="email" id="email" name="email" required>
-
-            <label for="phone_number">Telefon</label>
-            <input type="text" id="phone_number" name="phone_number" required>
-
-            <button type="submit">Zarejestruj się</button>
+            <button type="submit">Zaloguj się</button>
         </form>
+        {% if message %}
+            <p style="color: red; text-align: center;">{{ message }}</p>
+        {% endif %}
     </div>
 </body>
 </html>
