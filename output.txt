@@ -1,7 +1,7 @@
 ==== ./output.txt ====
 
 
-==== ./piwo1\.prettierrc.json ====
+==== ./frontend\.prettierrc.json ====
 {
   "$schema": "https://json.schemastore.org/prettierrc",
   "semi": false,
@@ -10,7 +10,7 @@
 }
 
 
-==== ./piwo1\jsconfig.json ====
+==== ./frontend\jsconfig.json ====
 {
   "compilerOptions": {
     "paths": {
@@ -21,9 +21,9 @@
 }
 
 
-==== ./piwo1\package.json ====
+==== ./frontend\package.json ====
 {
-  "name": "piwo1",
+  "name": "frontend",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -37,13 +37,13 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "axios": "^1.12.2",
     "pinia": "^3.0.3",
     "vue": "^3.5.22",
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",
+    "axios": "^1.12.2",
     "prettier": "3.6.2",
     "sass": "^1.93.2",
     "vite": "^7.1.7",
@@ -52,7 +52,7 @@
 }
 
 
-==== ./piwo1\vite.config.js ====
+==== ./frontend\vite.config.js ====
 import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
@@ -82,7 +82,7 @@ export default defineConfig({
 })
 
 
-==== ./piwo1\.vscode\extensions.json ====
+==== ./frontend\.vscode\extensions.json ====
 {
   "recommendations": [
     "Vue.volar",
@@ -91,7 +91,7 @@ export default defineConfig({
 }
 
 
-==== ./piwo1\.vscode\settings.json ====
+==== ./frontend\.vscode\settings.json ====
 {
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": {
@@ -104,7 +104,7 @@ export default defineConfig({
 }
 
 
-==== ./piwo1\data\endpoints\endpoints.txt ====
+==== ./frontend\data\endpoints\endpoints.txt ====
 User
     GET /user/:user_id
     bez niego zwraca dane aktualnego, z nim docelowego
@@ -191,7 +191,7 @@ Org
 Specjalne user_id = me, czyli bierzemy user id z tokena login gov
 
 
-==== ./piwo1\data\types\alert.json ====
+==== ./frontend\data\types\alert.json ====
 {
   "id": "string",
   "user_id": "string",
@@ -201,7 +201,7 @@ Specjalne user_id = me, czyli bierzemy user id z tokena login gov
 }
 
 
-==== ./piwo1\data\types\event.json ====
+==== ./frontend\data\types\event.json ====
 {
   "id": "string",
   "name": "string",
@@ -218,7 +218,7 @@ Specjalne user_id = me, czyli bierzemy user id z tokena login gov
 }
 
 
-==== ./piwo1\data\types\group.json ====
+==== ./frontend\data\types\group.json ====
 {
   "id": "string",
   "name": "string",
@@ -243,7 +243,7 @@ Specjalne user_id = me, czyli bierzemy user id z tokena login gov
 }
 
 
-==== ./piwo1\data\types\institution.json ====
+==== ./frontend\data\types\institution.json ====
 {
   "id": "string",
   "name": "string",
@@ -262,7 +262,7 @@ Specjalne user_id = me, czyli bierzemy user id z tokena login gov
 }
 
 
-==== ./piwo1\data\types\notification.json ====
+==== ./frontend\data\types\notification.json ====
 {
   "id": "string",
   "user_id": "string",
@@ -271,7 +271,7 @@ Specjalne user_id = me, czyli bierzemy user id z tokena login gov
 }
 
 
-==== ./piwo1\data\types\opinion.json ====
+==== ./frontend\data\types\opinion.json ====
 {
   "id": "string",
   "group_id": "string",
@@ -280,7 +280,7 @@ Specjalne user_id = me, czyli bierzemy user id z tokena login gov
 }
 
 
-==== ./piwo1\data\types\task.json ====
+==== ./frontend\data\types\task.json ====
 {
   "id": "string",
   "name": "string",
@@ -300,7 +300,7 @@ Specjalne user_id = me, czyli bierzemy user id z tokena login gov
 }
 
 
-==== ./piwo1\data\types\user.json ====
+==== ./frontend\data\types\user.json ====
 {
   "id": "string",
   "coordinates": {
@@ -320,7 +320,7 @@ Specjalne user_id = me, czyli bierzemy user id z tokena login gov
 }
 
 
-==== ./piwo1\src\App.vue ====
+==== ./frontend\src\App.vue ====
 <template>
   <MainView />
 </template>
@@ -332,7 +332,7 @@ import MainView from '@/views/MainView.vue'
 <style scoped></style>
 
 
-==== ./piwo1\src\main.js ====
+==== ./frontend\src\main.js ====
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import './assets/main.scss'
@@ -347,7 +347,21 @@ app.use(router)
 app.mount('#app')
 
 
-==== ./piwo1\src\api\axios.js ====
+==== ./frontend\src\api\alert.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// POST /event/:eventId/alert
+export const createAlert = (eventId, body) => api.post(ep.alert(eventId), body)
+
+// GET/PATCH/DEL /event/:eventId/alert/:alertId
+export const getAlert = (eventId, alertId) => api.get(ep.alertGet(eventId, alertId))
+export const updateAlert = (eventId, alertId, body) =>
+  api.patch(ep.alertGet(eventId, alertId), body)
+export const deleteAlert = (eventId, alertId) => api.delete(ep.alertGet(eventId, alertId))
+
+
+==== ./frontend\src\api\axios.js ====
 import axios from 'axios'
 
 const baseURL = import.meta.env.VITE_API_URL || '/api'
@@ -380,7 +394,28 @@ api.interceptors.response.use(
 export default api
 
 
-==== ./piwo1\src\api\endpoints.js ====
+==== ./frontend\src\api\certificate.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// GET /event/:eventId/user/:userId
+export const getCertificate = (eventId, userId, params = {}) =>
+  api.get(ep.certificate(eventId, userId), { params })
+
+
+==== ./frontend\src\api\chat.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// GET /event/:eventId/user/:userId/chat
+export const getChat = (eventId, userId, params = {}) =>
+  api.get(ep.chat(eventId, userId), { params })
+
+// POST /event/:eventId/user/:userId/chat
+export const sendChatMessage = (eventId, userId, body) => api.post(ep.chat(eventId, userId), body)
+
+
+==== ./frontend\src\api\endpoints.js ====
 export const ep = {
   //User
   me: () => '/user/me',
@@ -433,28 +468,158 @@ export const ep = {
 }
 
 
-==== ./piwo1\src\api\event.js ====
+==== ./frontend\src\api\event.js ====
 import api from './axios.js'
 import { ep } from './endpoints.js'
 
+// POST /event
 export const createEvent = (body) => api.post(ep.event(), body)
-export const getEvent = (id) => api.get(ep.eventOne(id))
-export const updateEvent = (id, body) => api.patch(ep.eventOne(id), body)
-export const deleteEvent = (id) => api.delete(ep.eventOne(id))
-export const confirmEvent = (id) => api.post(ep.eventConfirm(id))
-export const listUnconfirmedEvents = () => api.get(ep.eventUnconfirmed())
+
+// GET/PATCH/DEL /event/:eventId
+export const getEvent = (eventId) => api.get(ep.eventGet(eventId))
+export const updateEvent = (eventId, body) => api.patch(ep.eventGet(eventId), body)
+export const deleteEvent = (eventId) => api.delete(ep.eventGet(eventId))
+
+// GET /event/unconfirmed
+export const listUnconfirmedEvents = (params = {}) => api.get(ep.eventUnconfirmed(), { params })
+
+// POST /event/:eventId/confirm
+export const confirmEvent = (eventId) => api.post(ep.eventConfirm(eventId))
 
 
-==== ./piwo1\src\api\user.js ====
+==== ./frontend\src\api\group.js ====
 import api from './axios.js'
 import { ep } from './endpoints.js'
 
+// POST /event/:eventId/group
+export const createGroupForEvent = (eventId, body) => api.post(ep.eventGroup(eventId), body)
+
+// GET/PATCH/DEL /event/:eventId/group/:groupId
+export const getEventGroup = (eventId, groupId) => api.get(ep.eventGroupGet(eventId, groupId))
+export const updateEventGroup = (eventId, groupId, body) =>
+  api.patch(ep.eventGroupGet(eventId, groupId), body)
+export const deleteEventGroup = (eventId, groupId) => api.delete(ep.eventGroupGet(eventId, groupId))
+
+// POST /event/:eventId/group/:groupId/user  (body: { user_id })
+// GET/DEL /event/:eventId/group/:groupId/user/:userId
+export const addUserToEventGroup = (eventId, groupId, userId) =>
+  api.post(ep.eventGroupUser(eventId, groupId), { user_id: userId })
+
+export const getUserInEventGroup = (eventId, groupId, userId) =>
+  api.get(ep.eventGroupUserGet(eventId, groupId, userId))
+
+export const removeUserFromEventGroup = (eventId, groupId, userId) =>
+  api.delete(ep.eventGroupUserGet(eventId, groupId, userId))
+
+
+==== ./frontend\src\api\institution.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// POST /institution
+export const createInstitution = (body) => api.post(ep.institution(), body)
+
+// GET/PATCH/DEL /institution/:id
+export const getInstitution = (id) => api.get(ep.institutionGet(id))
+export const updateInstitution = (id, body) => api.patch(ep.institutionGet(id), body)
+export const deleteInstitution = (id) => api.delete(ep.institutionGet(id))
+
+// GET /institution/unconfirmed
+export const listUnconfirmedInstitutions = (params = {}) =>
+  api.get(ep.institutionUnconfirmed(), { params })
+
+// POST /institution/:id/confirm
+export const confirmInstitution = (id) => api.post(ep.institutionConfirm(id))
+
+// POST/GET/PATCH/DEL /institution/:institutionId/user/:userId
+export const addUserToInstitution = (institutionId, userId, body = {}) =>
+  api.post(ep.institutionUser(institutionId, userId), body)
+
+export const getInstitutionUser = (institutionId, userId) =>
+  api.get(ep.institutionUser(institutionId, userId))
+
+export const updateInstitutionUser = (institutionId, userId, body) =>
+  api.patch(ep.institutionUser(institutionId, userId), body)
+
+export const removeUserFromInstitution = (institutionId, userId) =>
+  api.delete(ep.institutionUser(institutionId, userId))
+
+
+==== ./frontend\src\api\notification.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// POST /user/:userId/notification
+export const createNotification = (userId, body) => api.post(ep.notification(userId), body)
+
+// GET/PATCH/DEL /user/:userId/notification/:id
+export const getNotification = (userId, id) => api.get(ep.notificationGet(userId, id))
+export const updateNotification = (userId, id, body) =>
+  api.patch(ep.notificationGet(userId, id), body)
+export const deleteNotification = (userId, id) => api.delete(ep.notificationGet(userId, id))
+
+
+==== ./frontend\src\api\opinion.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// POST /user/:userId/opinion
+export const createOpinion = (userId, body) => api.post(ep.opinion(userId), body)
+
+// GET/PATCH/DEL /user/:userId/opinion/:opinionId
+export const getOpinion = (userId, opinionId) => api.get(ep.opinionGet(userId, opinionId))
+export const updateOpinion = (userId, opinionId, body) =>
+  api.patch(ep.opinionGet(userId, opinionId), body)
+export const deleteOpinion = (userId, opinionId) => api.delete(ep.opinionGet(userId, opinionId))
+
+
+==== ./frontend\src\api\task.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// GET /group/:groupId/user/free
+export const listFreeUsersForGroup = (groupId, params = {}) =>
+  api.get(ep.groupUsersFree(groupId), { params })
+
+// POST /group/:groupId/task
+export const createTask = (groupId, body) => api.post(ep.task(groupId), body)
+
+// GET/PATCH/DEL /group/:groupId/task/:taskId
+export const getTask = (groupId, taskId) => api.get(ep.taskGet(groupId, taskId))
+export const updateTask = (groupId, taskId, body) => api.patch(ep.taskGet(groupId, taskId), body)
+export const deleteTask = (groupId, taskId) => api.delete(ep.taskGet(groupId, taskId))
+
+// POST /group/:groupId/task/:taskId/user   (body: { user_id })
+export const addUserToTask = (groupId, taskId, userId) =>
+  api.post(ep.taskUser(groupId, taskId), { user_id: userId })
+
+// GET/DEL /group/:groupId/task/:taskId/user/:userId
+export const getUserOnTask = (groupId, taskId, userId) =>
+  api.get(ep.taskUserGet(groupId, taskId, userId))
+export const removeUserFromTask = (groupId, taskId, userId) =>
+  api.delete(ep.taskUserGet(groupId, taskId, userId))
+
+
+==== ./frontend\src\api\user.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// /user/me
 export const getMe = () => api.get(ep.me())
+
+// /user/:id
 export const getUser = (id) => api.get(ep.user(id))
+
+// GET/POST /user/:id/localization
+export const getUserLocalization = (id) => api.get(ep.userLocalization(id))
 export const setUserLocalization = (id, body) => api.post(ep.userLocalization(id), body)
 
+// GET /events/all/users/:id
+export const listEventsForUser = (userId, params = {}) =>
+  api.get(ep.eventsForUser(userId), { params })
 
-==== ./piwo1\src\assets\main.scss ====
+
+==== ./frontend\src\assets\main.scss ====
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 * {
@@ -478,7 +643,7 @@ a:visited {
 }
 
 
-==== ./piwo1\src\assets\variables.scss ====
+==== ./frontend\src\assets\variables.scss ====
 $font-color: #333;
 $background-color: #f9f9f9;
 $background-dark: #ece8e8;
@@ -486,16 +651,16 @@ $blue-color: #2f83c2;
 $red-color: #cc3960;
 
 
-==== ./piwo1\src\components\browser\AdvertField.vue ====
+==== ./frontend\src\components\browser\AdvertField.vue ====
 
 
-==== ./piwo1\src\components\browser\MapField.vue ====
+==== ./frontend\src\components\browser\MapField.vue ====
 
 
-==== ./piwo1\src\components\browser\ResultsBar.vue ====
+==== ./frontend\src\components\browser\ResultsBar.vue ====
 
 
-==== ./piwo1\src\components\dashboard\SettingsBar.vue ====
+==== ./frontend\src\components\dashboard\SettingsBar.vue ====
 <template>
   <div>
     <ul>
@@ -547,7 +712,7 @@ $red-color: #cc3960;
 </template>
 
 
-==== ./piwo1\src\components\dashboard\Categories\AllCalendar.vue ====
+==== ./frontend\src\components\dashboard\Categories\AllCalendar.vue ====
 <template>
   Tutaj pojawi się kalendarz z terminami eventów. Ogólny template jest ten sam ale:<br />
   - wolontariusz widzi eventy, do których jest zapisany. Może się z nich wypisać<br />
@@ -558,7 +723,7 @@ $red-color: #cc3960;
 </template>
 
 
-==== ./piwo1\src\components\dashboard\Categories\AllCertificates.vue ====
+==== ./frontend\src\components\dashboard\Categories\AllCertificates.vue ====
 <template>
     Pokazuje certyfikaty</br>
     - wolontariusz może wygenerować certyfikaty z eventów, w których uczestniczył </br>
@@ -568,19 +733,19 @@ $red-color: #cc3960;
 </template>
 
 
-==== ./piwo1\src\components\dashboard\Categories\AllDashboard.vue ====
+==== ./frontend\src\components\dashboard\Categories\AllDashboard.vue ====
 <template>Tutaj wyświetli się podgląd ważnych rzeczy. Czym są ważne rzeczy - zobaczymy</template>
 
 
-==== ./piwo1\src\components\dashboard\Categories\AllReports.vue ====
+==== ./frontend\src\components\dashboard\Categories\AllReports.vue ====
 <template>printuje dashboard, potem ogarniemy</template>
 
 
-==== ./piwo1\src\components\dashboard\Categories\AllUserData.vue ====
+==== ./frontend\src\components\dashboard\Categories\AllUserData.vue ====
 <template>W tym miejscu użytkownik będzie edytował swoje dane</template>
 
 
-==== ./piwo1\src\components\dashboard\Categories\CoordContact.vue ====
+==== ./frontend\src\components\dashboard\Categories\CoordContact.vue ====
 <template>
     Tutaj koordynator ma czat z organizatorem</br>
     Wybiera event, o którym chce rozmawiać</br>
@@ -588,7 +753,7 @@ $red-color: #cc3960;
 </template>
 
 
-==== ./piwo1\src\components\dashboard\Categories\OrgAdvertPublication.vue ====
+==== ./frontend\src\components\dashboard\Categories\OrgAdvertPublication.vue ====
 <template>
     Tutaj organizator dodaje i edytuje ogłoszenia.</br>
     Klika dodaj lub wybiera ogłoszenie do edycji.</br>
@@ -598,14 +763,14 @@ $red-color: #cc3960;
 </template>
 
 
-==== ./piwo1\src\components\dashboard\Categories\OrgAlertSettings.vue ====
+==== ./frontend\src\components\dashboard\Categories\OrgAlertSettings.vue ====
 <template>
     Tutaj organizator zarządza alertami.</br>
     damy mu kilka rodzajów alertów
 </template>
 
 
-==== ./piwo1\src\components\dashboard\Categories\OrgApplicationManagement.vue ====
+==== ./frontend\src\components\dashboard\Categories\OrgApplicationManagement.vue ====
 <template>
     Tutaj organizator zobaczy wolontariuszy,</br>
     którzy się zgłosili (select eventu). Tutaj może ich usunąć</br>
@@ -614,32 +779,32 @@ $red-color: #cc3960;
 </template>
 
 
-==== ./piwo1\src\components\dashboard\Categories\OrgOpinions.vue ====
+==== ./frontend\src\components\dashboard\Categories\OrgOpinions.vue ====
 <template>
     Tutaj organizator zarządza opiniami dla wolontariuszy</br>
     na wszystkich zakończonych wydarzeniach.
 </template>
 
 
-==== ./piwo1\src\components\dashboard\Categories\SudoEventVerification.vue ====
+==== ./frontend\src\components\dashboard\Categories\SudoEventVerification.vue ====
 <template>
     Tutaj admin zatwierdza wydarzenia</br>
 </template>
 
 
-==== ./piwo1\src\components\dashboard\Categories\SudoOrgVerification.vue ====
+==== ./frontend\src\components\dashboard\Categories\SudoOrgVerification.vue ====
 <template>
     Kiedy ktoś chce założyć organizację, admin ją zatwierdza.</br>
 </template>
 
 
-==== ./piwo1\src\components\dashboard\Categories\VolNotifSettings.vue ====
+==== ./frontend\src\components\dashboard\Categories\VolNotifSettings.vue ====
 <template>
     Tutaj wolontariusz decyduje, jakie powiadomienia chce otrzymywać.</br>
 </template>
 
 
-==== ./piwo1\src\components\structure\Footer.vue ====
+==== ./frontend\src\components\structure\Footer.vue ====
 <template>
   <footer>To jest footer i huj.</footer>
 </template>
@@ -654,7 +819,7 @@ footer {
 </style>
 
 
-==== ./piwo1\src\components\structure\Navbar.vue ====
+==== ./frontend\src\components\structure\Navbar.vue ====
 <template>
   <nav>
     <router-link to="/">Ogłoszenia</router-link>
@@ -687,7 +852,7 @@ nav a.router-link-exact-active {
 </style>
 
 
-==== ./piwo1\src\composables\useUser.js ====
+==== ./frontend\src\composables\useUser.js ====
 import { ref } from 'vue'
 import { getMe } from '@/api/user.js'
 
@@ -712,7 +877,7 @@ export function useUser() {
 }
 
 
-==== ./piwo1\src\router\index.js ====
+==== ./frontend\src\router\index.js ====
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginPage from '../views/LoginPage.vue'
 import BrowserPage from '../views/BrowserPage.vue'
@@ -817,7 +982,7 @@ const router = createRouter({
 export default router
 
 
-==== ./piwo1\src\stores\counter.js ====
+==== ./frontend\src\stores\counter.js ====
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 
@@ -832,7 +997,7 @@ export const useCounterStore = defineStore('counter', () => {
 })
 
 
-==== ./piwo1\src\views\BrowserPage.vue ====
+==== ./frontend\src\views\BrowserPage.vue ====
 <template>Browser Page</template>
 
 <script setup></script>
@@ -840,7 +1005,7 @@ export const useCounterStore = defineStore('counter', () => {
 <style></style>
 
 
-==== ./piwo1\src\views\DashboardPage.vue ====
+==== ./frontend\src\views\DashboardPage.vue ====
 <template>
   <div class="dashboard">
     <div class="settings-bar"><SettingsBar /></div>
@@ -867,7 +1032,7 @@ import SettingsBar from '@/components/dashboard/SettingsBar.vue'
 </style>
 
 
-==== ./piwo1\src\views\LoginPage.vue ====
+==== ./frontend\src\views\LoginPage.vue ====
 <template>
   <div>
     <a href="/">Zaloguj się!</a>
@@ -879,7 +1044,7 @@ import SettingsBar from '@/components/dashboard/SettingsBar.vue'
 <style></style>
 
 
-==== ./piwo1\src\views\MainView.vue ====
+==== ./frontend\src\views\MainView.vue ====
 <template>
   <div class="container">
     <Navbar />
@@ -907,7 +1072,7 @@ import Footer from '@/components/structure/Footer.vue'
 </style>
 
 
-==== ./piwo1\src\views\NotFound.vue ====
+==== ./frontend\src\views\NotFound.vue ====
 <template>Ni ma takowej strony i huj</template>
 
 

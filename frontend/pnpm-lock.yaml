@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      axios:
-        specifier: ^1.12.2
-        version: 1.12.2
       pinia:
         specifier: ^3.0.3
         version: 3.0.3(vue@3.5.22)
@@ -24,6 +21,9 @@ importers:
       '@vitejs/plugin-vue':
         specifier: ^6.0.1
         version: 6.0.1(vite@7.1.9(sass@1.93.2))(vue@3.5.22)
+      axios:
+        specifier: ^1.12.2
+        version: 1.12.2
       prettier:
         specifier: 3.6.2
         version: 3.6.2
