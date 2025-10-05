@@ -1,1 +1,1 @@
-<template>printuje dashboard, potem ogarniemy</template>
+<template>printuje dashboard, potem ogarnsiemy</template>
