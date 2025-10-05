@@ -13,6 +13,8 @@ services:
     build: login_gov_mock
     networks:
       - volcon-network
+    environment:
+      - MAIN_BACKEND_TOKEN_ATTACH_URL=http://localhost:8080/volcon/attach_token/
   volcon_api:
     build: volcon_api
     networks:
