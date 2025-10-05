@@ -115,8 +115,9 @@ def register_page(request):
             print(response_data)
             print(response.status_code)
             if response.status_code == 201:
+                print('witamy w burdelu')
                 message = f"Zarejestrowano! ID użytkownika: {response_data.get('user_id')}"
-                user = User.objects.filter(id=id).first()
+                user = User.objects.filter(id=response_data.get('user_id')).first()
                 if user is None:
                     return JsonResponse({'error': 'Invalid id'}, status=401)
                 url_to_redirect = get_attach_token_url(user)
@@ -150,6 +151,8 @@ def login_page(request):
 
         dummy_request = DummyRequest(data)
         response = login_view(dummy_request)
+        print(response.content)
+        print(response.status_code)
 
         try:
             response_data = json.loads(response.content)
@@ -164,7 +167,6 @@ def login_page(request):
             else:
                 message = response_data.get('error', 'Błąd logowania')
                 return HttpResponse(message, content_type="text/plain")
-            
         except Exception:
             message = 'Błąd logowania.'
     return render(request, 'login.html', {'message': message})
