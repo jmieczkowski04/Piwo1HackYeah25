@@ -1,56 +1,106 @@
 <template>
-  <div>
-    <ul>
-      <li>
-        <router-link to="/dashboard/panel">Panel główny</router-link>
-      </li>
-      <li v-if="auth.isCoordinator">
-        <router-link to="/dashboard/user">Dane użytkownika</router-link>
-      </li>
-      <li>
-        <router-link to="/dashboard/calendar">Kalendarz</router-link>
-      </li>
-      <li>
-        <router-link to="/dashboard/certificates">Zaświadczenia</router-link>
-      </li>
-      <li>
-        <router-link to="/dashboard/reports">Raporty</router-link>
-      </li>
-      <!--  -->
-      <li>
-        <router-link to="/dashboard/contact">Kontakt</router-link>
-      </li>
-      <!--  -->
-      <li v-if="auth.isOrgAdmin || auth.isGovAdmin">
-        <router-link to="/dashboard/advert-publication">Publikacja ogłoszeń</router-link>
-      </li>
-      <li v-if="auth.isOrgAdmin">
-        <router-link to="/dashboard/alert-settings">Ustawienia alertów</router-link>
-      </li>
-      <li v-if="auth.isOrgAdmin || auth.isGovAdmin">
-        <router-link to="/dashboard/application-management">Zarządzanie zgłoszeniami</router-link>
-      </li>
-      <li v-if="auth.isOrgAdmin || auth.isGovAdmin">
-        <router-link to="/dashboard/opinions">Opinie</router-link>
-      </li>
-      <!-- TYLKO dla pełnych adminów rządowych -->
-      <li v-if="auth.isGovAdmin">
-        <router-link to="/dashboard/institution-verification">Weryfikacja organizacji</router-link>
-      </li>
+  <nav class="settings">
+    <RouterLink class="item" to="/dashboard/panel">Panel główny</RouterLink>
 
-      <li v-if="auth.isGovAdmin">
-        <router-link to="/dashboard/event-verification">Weryfikacja wydarzeń</router-link>
-      </li>
+    <RouterLink v-if="auth.isCoordinator" class="item" to="/dashboard/user">
+      Dane użytkownika
+    </RouterLink>
 
-      <!--  -->
-      <li v-if="auth.isVolunteer">
-        <router-link to="/dashboard/notification-settings">Ustawienia powiadomień</router-link>
-      </li>
-    </ul>
-  </div>
+    <RouterLink class="item" to="/dashboard/calendar">Kalendarz</RouterLink>
+    <RouterLink class="item" to="/dashboard/certificates">Zaświadczenia</RouterLink>
+    <RouterLink class="item" to="/dashboard/reports">Raporty</RouterLink>
+
+    <div class="divider" role="separator"></div>
+
+    <RouterLink class="item" to="/dashboard/contact">Kontakt</RouterLink>
+
+    <RouterLink
+      v-if="auth.isOrgAdmin || auth.isGovAdmin"
+      class="item"
+      to="/dashboard/advert-publication"
+    >
+      Publikacja ogłoszeń
+    </RouterLink>
+
+    <RouterLink v-if="auth.isOrgAdmin" class="item" to="/dashboard/alert-settings">
+      Ustawienia alertów
+    </RouterLink>
+
+    <RouterLink
+      v-if="auth.isOrgAdmin || auth.isGovAdmin"
+      class="item"
+      to="/dashboard/application-management"
+    >
+      Zarządzanie zgłoszeniami
+    </RouterLink>
+
+    <RouterLink v-if="auth.isOrgAdmin || auth.isGovAdmin" class="item" to="/dashboard/opinions">
+      Opinie
+    </RouterLink>
+
+    <RouterLink v-if="auth.isGovAdmin" class="item" to="/dashboard/institution-verification">
+      Weryfikacja organizacji
+    </RouterLink>
+
+    <RouterLink v-if="auth.isGovAdmin" class="item" to="/dashboard/event-verification">
+      Weryfikacja wydarzeń
+    </RouterLink>
+
+    <RouterLink v-if="auth.isVolunteer" class="item" to="/dashboard/notification-settings">
+      Ustawienia powiadomień
+    </RouterLink>
+  </nav>
 </template>
 
 <script setup>
 import { useAuthStore } from '@/stores/auth.js'
 const auth = useAuthStore()
 </script>
+
+<style scoped lang="scss">
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  background: $surface;
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  padding: 0.5rem;
+}
+
+/* pojedynczy link */
+.item {
+  display: block;
+  padding: 0.6rem 0.75rem;
+  border-radius: $radius-sm;
+  color: $muted-color;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-left-color 120ms ease;
+
+  border-left: 3px solid transparent;
+
+  &:hover {
+    background: $surface-hover;
+    color: $font-color;
+  }
+
+  /* aktywny stan — działa też dla zagnieżdżonych tras */
+  &.router-link-active,
+  &.router-link-exact-active {
+    background: rgba($blue-color, 0.08);
+    color: $blue-color;
+    font-weight: 600;
+    border-left-color: $blue-color;
+  }
+}
+
+/* separator sekcji */
+.divider {
+  height: 1px;
+  background: $border-color;
+  margin: 0.35rem 0;
+}
+</style>

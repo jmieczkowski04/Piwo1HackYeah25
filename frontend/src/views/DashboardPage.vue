@@ -11,14 +11,17 @@ import SettingsBar from '@/components/dashboard/SettingsBar.vue'
 
 <style scoped lang="scss">
 .dashboard {
-  display: flex;
-}
-.settings-bar {
-  height: 100%;
-  width: 30%;
-}
-.dashboard-field {
-  height: 100%;
-  width: 70%;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1rem;
+  padding: 1rem;
+
+  .settings-bar,
+  .dashboard-field {
+    background: $surface;
+    border: 1px solid $border-color;
+    border-radius: $radius-lg;
+    padding: 1rem;
+  }
 }
 </style>
