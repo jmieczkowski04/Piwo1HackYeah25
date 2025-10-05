@@ -655,22 +655,105 @@ body {
   background: $background-color;
 }
 
+a,
 a:visited {
-  color: $font-color;
-}
-
-a {
   color: inherit;
   text-decoration: none;
 }
 a:hover {
   color: $blue-color;
 }
+
+/* --- Karty / sekcje --- */
 .card {
   background: $surface;
   border: 1px solid $border-color;
   border-radius: $radius-lg;
   box-shadow: $shadow-sm;
+  padding: 1rem;
+}
+
+/* --- Przyciski (spójne z navbar/sidebarem) --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: $radius-md;
+  border: 1px solid $border-color;
+  background: $surface;
+  color: $font-color;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
+
+  &:hover {
+    background: $surface-hover;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+.btn--primary {
+  background: $blue-color;
+  color: #fff;
+  border-color: transparent;
+
+  &:hover {
+    filter: brightness(0.96);
+  }
+}
+
+.btn--danger {
+  background: $red-color;
+  color: #fff;
+  border-color: transparent;
+
+  &:hover {
+    filter: brightness(0.96);
+  }
+}
+
+/* --- Form controls --- */
+.input,
+.select,
+.textarea {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  background: $surface;
+  color: $font-color;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:focus {
+    outline: none;
+    border-color: $blue-color;
+    box-shadow: 0 0 0 3px rgba($blue-color, 0.12);
+  }
+}
+
+.select {
+  appearance: none;
+}
+
+/* --- Layout pomocniczy --- */
+.container-max {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.grid-gap {
+  display: grid;
+  gap: 1rem;
 }
 
 
@@ -816,13 +899,278 @@ const auth = useAuthStore()
 
 ==== ./frontend\src\components\dashboard\Categories\AllCalendar.vue ====
 <template>
-  Tutaj pojawi się kalendarz z terminami eventów. Ogólny template jest ten sam ale:<br />
-  - wolontariusz widzi eventy, do których jest zapisany. Może się z nich wypisać<br />
-  - ogranizator widzi stworzone przez siebie eventy. Może tu przypisywać wolontariuszy do zadań<br />
-  - koordynator widzi eventy, do których zgłosił wolontariuszy. Czyli widzi to, co każdy z
-  wolontariuszy<br />
-  - admin widzi wszystko
+  <div class="calendar">
+    <header class="calendar__head">
+      <h2>Kalendarz wydarzeń</h2>
+      <p class="muted">
+        Widok zależy od roli.
+        {{ canManage ? 'Masz uprawnienia do zarządzania zadaniami.' : 'Podgląd tylko do odczytu.' }}
+      </p>
+    </header>
+
+    <div class="filters">
+      <button
+        class="btn"
+        :class="{ 'btn--primary': activeTab === 'upcoming' }"
+        @click="activeTab = 'upcoming'"
+      >
+        Nadchodzące
+      </button>
+      <button
+        class="btn"
+        :class="{ 'btn--primary': activeTab === 'past' }"
+        @click="activeTab = 'past'"
+      >
+        Zakończone
+      </button>
+    </div>
+
+    <div v-if="filtered.length === 0" class="empty card">Brak wydarzeń do wyświetlenia.</div>
+
+    <section v-for="ev in filtered" :key="ev.id" class="event card">
+      <div class="event__header">
+        <div>
+          <h3 class="event__title">{{ ev.name }}</h3>
+          <p class="muted">{{ ev.description }}</p>
+          <p class="muted">
+            {{ formatDate(ev.start_date) }} — {{ formatTime(ev.start_date) }} →
+            {{ formatTime(ev.end_date) }}
+          </p>
+        </div>
+        <span class="badge" :class="badgeClass(ev.status)">{{ ev.status }}</span>
+      </div>
+
+      <div class="event__groups">
+        <div v-for="grp in ev.groups" :key="grp.id" class="group">
+          <h4 class="group__title">{{ grp.name }}</h4>
+
+          <div class="tasks">
+            <div v-for="t in grp.tasks" :key="t.id" class="task">
+              <div class="task__main">
+                <div class="task__title">
+                  <strong>{{ t.name }}</strong>
+                  <span class="muted">
+                    {{ formatTime(t.start_date) }}–{{ formatTime(t.end_date) }}
+                  </span>
+                </div>
+                <div class="task__users">
+                  <span class="chip">
+                    Wolontariusze: <strong>{{ t.users?.length || 0 }}</strong>
+                  </span>
+                </div>
+              </div>
+
+              <div class="task__actions">
+                <template v-if="canManage">
+                  <button class="btn" @click="onAddUser(ev, grp, t)">Dodaj wolontariusza</button>
+                  <button class="btn btn--danger" @click="onRemoveUser(ev, grp, t)">
+                    Usuń z zadania
+                  </button>
+                </template>
+                <template v-else>
+                  <span class="muted">Tylko podgląd</span>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
 </template>
+
+<script setup>
+import { onMounted, ref, computed } from 'vue'
+import { useAuthStore, ROLE } from '@/stores/auth.js'
+import { listEventsForUser } from '@/api/user.js'
+import { mockEventsForUser } from '@/mocks/events.js'
+
+const auth = useAuthStore()
+const loading = ref(false)
+const error = ref('')
+const events = ref([])
+const activeTab = ref('upcoming') // 'upcoming' | 'past'
+
+const canManage = computed(
+  () => auth.currentRole === ROLE.ORG_ADMIN || auth.currentRole === ROLE.GOV_ADMIN,
+)
+
+onMounted(fetchEvents)
+
+async function fetchEvents() {
+  loading.value = true
+  error.value = ''
+  try {
+    // Gdy backend będzie gotowy – zwróci realne dane.
+    const uid = auth.user?.id || 'me'
+    const data = await listEventsForUser(uid)
+    // spodziewamy się tablicy eventów
+    events.value = Array.isArray(data) ? data : data?.events || []
+  } catch (e) {
+    // Fallback na mocki
+    console.warn('GET /events/all/users/:id fallback -> mock:', e?.message || e)
+    events.value = mockEventsForUser()
+  } finally {
+    loading.value = false
+  }
+}
+
+const filtered = computed(() => {
+  const now = Date.now()
+  const arr = (events.value || [])
+    .slice()
+    .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
+  if (activeTab.value === 'upcoming') {
+    return arr.filter((e) => new Date(e.end_date).getTime() >= now)
+  }
+  return arr.filter((e) => new Date(e.end_date).getTime() < now).reverse()
+})
+
+function formatDate(iso) {
+  const d = new Date(iso)
+  return d.toLocaleDateString()
+}
+function formatTime(iso) {
+  const d = new Date(iso)
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+function badgeClass(status) {
+  return status === 'CONFIRMED' ? 'badge--ok' : status === 'FINISHED' ? 'badge--muted' : ''
+}
+
+// Placeholdery akcji (API będzie to robić potem)
+// ORG_ADMIN + GOV_ADMIN tylko widzą te przyciski
+function onAddUser(ev, grp, t) {
+  alert(`(mock) Dodaj wolontariusza → ${ev.name} / ${grp.name} / ${t.name}`)
+}
+function onRemoveUser(ev, grp, t) {
+  alert(`(mock) Usuń wolontariusza → ${ev.name} / ${grp.name} / ${t.name}`)
+}
+</script>
+
+<style scoped lang="scss">
+.calendar__head {
+  margin-bottom: 0.5rem;
+
+  .muted {
+    color: $muted-color;
+  }
+}
+
+.filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.event {
+  margin-bottom: 1rem;
+}
+
+.event__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+
+  .event__title {
+    margin: 0 0 0.2rem 0;
+  }
+  .muted {
+    color: $muted-color;
+    margin: 0.1rem 0;
+  }
+}
+
+.event__groups {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.group {
+  border: 1px dashed $border-color;
+  border-radius: $radius-md;
+  padding: 0.75rem;
+
+  .group__title {
+    margin: 0 0 0.5rem 0;
+  }
+}
+
+.tasks {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.task {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  padding: 0.6rem;
+  background: $surface;
+
+  .task__main {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .task__title {
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+
+    .muted {
+      color: $muted-color;
+      font-size: 0.95rem;
+    }
+  }
+
+  .task__users .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: $radius-sm;
+    background: $surface-hover;
+    border: 1px solid $border-color;
+    font-size: 0.9rem;
+    color: $muted-color;
+  }
+
+  .task__actions {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: $radius-sm;
+  border: 1px solid $border-color;
+  background: $surface-hover;
+  color: $muted-color;
+  font-weight: 600;
+  font-size: 0.85rem;
+
+  &.badge--ok {
+    background: rgba($blue-color, 0.08);
+    border-color: rgba($blue-color, 0.3);
+    color: $blue-color;
+  }
+  &.badge--muted {
+    opacity: 0.75;
+  }
+}
+</style>
 
 
 ==== ./frontend\src\components\dashboard\Categories\AllCertificates.vue ====
@@ -1159,6 +1507,119 @@ function onChange(e) {
 </style>
 
 
+==== ./frontend\src\mocks\events.js ====
+// Prosty mock danych kalendarza, zgodny z naszymi typami.
+export function mockEventsForUser() {
+  // daty w ISO, kilka eventów przeszłych i przyszłych
+  const now = new Date()
+  const day = 24 * 60 * 60 * 1000
+
+  const iso = (d) => new Date(d).toISOString()
+
+  return [
+    {
+      id: 'evt-krk-001',
+      name: 'Bieg Charytatywny',
+      description: 'Wydarzenie biegowe w Parku Jordana.',
+      status: 'CONFIRMED',
+      institution_id: 'inst-1',
+      start_date: iso(now.getTime() + 3 * day),
+      end_date: iso(now.getTime() + 3 * day + 3 * 60 * 60 * 1000),
+      groups: [
+        {
+          id: 'grp-1',
+          name: 'Strefa Startu',
+          tasks: [
+            {
+              id: 'tsk-1',
+              name: 'Rejestracja uczestników',
+              start_date: iso(now.getTime() + 3 * day),
+              end_date: iso(now.getTime() + 3 * day + 2 * 60 * 60 * 1000),
+              users: [{ id: 'u-2' }, { id: 'u-3' }],
+            },
+            {
+              id: 'tsk-2',
+              name: 'Wydawanie numerów',
+              start_date: iso(now.getTime() + 3 * day),
+              end_date: iso(now.getTime() + 3 * day + 2 * 60 * 60 * 1000),
+              users: [{ id: 'u-4' }],
+            },
+          ],
+        },
+        {
+          id: 'grp-2',
+          name: 'Trasa',
+          tasks: [
+            {
+              id: 'tsk-3',
+              name: 'Nawadnianie 5km',
+              start_date: iso(now.getTime() + 3 * day + 60 * 60 * 1000),
+              end_date: iso(now.getTime() + 3 * day + 3 * 60 * 60 * 1000),
+              users: [{ id: 'u-5' }, { id: 'u-6' }],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'evt-krk-002',
+      name: 'Zbiórka Żywności',
+      description: 'Akcja w kilku sklepach na terenie miasta.',
+      status: 'CONFIRMED',
+      institution_id: 'inst-2',
+      start_date: iso(now.getTime() + 7 * day),
+      end_date: iso(now.getTime() + 7 * day + 8 * 60 * 60 * 1000),
+      groups: [
+        {
+          id: 'grp-3',
+          name: 'Sklep A',
+          tasks: [
+            {
+              id: 'tsk-4',
+              name: 'Zmiana poranna',
+              start_date: iso(now.getTime() + 7 * day),
+              end_date: iso(now.getTime() + 7 * day + 4 * 60 * 60 * 1000),
+              users: [{ id: 'u-1' }], // nasz test user
+            },
+            {
+              id: 'tsk-5',
+              name: 'Zmiana popołudniowa',
+              start_date: iso(now.getTime() + 7 * day + 4 * 60 * 60 * 1000),
+              end_date: iso(now.getTime() + 7 * day + 8 * 60 * 60 * 1000),
+              users: [{ id: 'u-7' }],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'evt-krk-000',
+      name: 'Porządkowanie Parku',
+      description: 'Akcja sprzątania po weekendzie.',
+      status: 'FINISHED',
+      institution_id: 'inst-3',
+      start_date: iso(now.getTime() - 5 * day),
+      end_date: iso(now.getTime() - 5 * day + 3 * 60 * 60 * 1000),
+      groups: [
+        {
+          id: 'grp-4',
+          name: 'Strefa wschodnia',
+          tasks: [
+            {
+              id: 'tsk-6',
+              name: 'Zbieranie odpadów',
+              start_date: iso(now.getTime() - 5 * day),
+              end_date: iso(now.getTime() - 5 * day + 3 * 60 * 60 * 1000),
+              users: [{ id: 'u-1' }, { id: 'u-8' }],
+            },
+          ],
+        },
+      ],
+    },
+  ]
+}
+
+
 ==== ./frontend\src\router\index.js ====
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginPage from '../views/LoginPage.vue'
@@ -1343,7 +1804,7 @@ export const useAuthStore = defineStore('auth', () => {
 <template>
   <div class="dashboard">
     <div class="settings-bar"><SettingsBar /></div>
-    <div class="dashboard-field"><RouterView /></div>
+    <div class="dashboard-field card"><RouterView /></div>
   </div>
 </template>
 
@@ -1358,12 +1819,12 @@ import SettingsBar from '@/components/dashboard/SettingsBar.vue'
   gap: 1rem;
   padding: 1rem;
 
-  .settings-bar,
   .dashboard-field {
-    background: $surface;
-    border: 1px solid $border-color;
-    border-radius: $radius-lg;
-    padding: 1rem;
+    min-height: 60vh;
+  }
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
   }
 }
 </style>
@@ -1375,7 +1836,7 @@ import SettingsBar from '@/components/dashboard/SettingsBar.vue'
     <h2>Testowy login</h2>
     <p>Po kliknięciu poniżej dostaniesz wszystkie 4 role do wyboru w nawigacji.</p>
 
-    <button class="btn" @click="loginTest" :disabled="loading">
+    <button class="btn btn--primary" @click="loginTest" :disabled="loading">
       {{ loading ? 'Logowanie…' : 'Zaloguj testowo' }}
     </button>
 
@@ -1423,18 +1884,31 @@ async function loginTest() {
   max-width: 520px;
   margin: 3rem auto;
   padding: 2rem;
-  background: $background-dark;
-  border-radius: 12px;
+  background: $surface;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+
+  h2 {
+    margin: 0 0 0.25rem 0;
+  }
+  p {
+    color: $muted-color;
+    margin: 0 0 1rem 0;
+  }
 }
+
 .btn {
-  padding: 0.6rem 1rem;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
+  margin-top: 0.25rem;
 }
+
 .preview {
   margin-top: 1rem;
+
+  ul {
+    margin: 0.25rem 0 0 1rem;
+    color: $muted-color;
+  }
 }
 </style>
 
@@ -1468,6 +1942,120 @@ import Footer from '@/components/structure/Footer.vue'
 
 
 ==== ./frontend\src\views\NotFound.vue ====
-<template>Ni ma takowej strony i huj</template>
+<template>
+  <div class="nf">
+    <div class="panel">
+      <img class="logo" src="@/assets/logo.png" alt="Logo" />
+      <h1>Ups, nie ma takiej strony</h1>
+      <p class="hint">
+        Kod błędu: <strong>404</strong>. Link mógł być nieaktualny albo wkradła się literówka.
+      </p>
+
+      <div class="actions">
+        <button class="btn" @click="goBack">Wróć</button>
+        <router-link class="btn" to="/">Strona główna</router-link>
+        <router-link class="btn btn--primary" to="/dashboard">Przejdź do panelu</router-link>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { useRouter } from 'vue-router'
+const router = useRouter()
+function goBack() {
+  if (window.history.length > 1) router.back()
+  else router.push('/')
+}
+</script>
+
+<style scoped lang="scss">
+.nf {
+  min-height: calc(100vh - 120px); // minus navbar+footer
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+}
+
+.panel {
+  width: 100%;
+  max-width: 720px;
+  background: $surface;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 64px;
+  width: auto;
+  margin-bottom: 0.75rem;
+  display: inline-block;
+}
+
+h1 {
+  margin: 0.25rem 0 0.25rem 0;
+  font-size: 1.6rem;
+  color: $font-color;
+}
+
+.hint {
+  margin: 0 0 1.25rem 0;
+  color: $muted-color;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+/* Lokalne, spójne przyciski (bez @extend) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0.55rem 0.9rem;
+  border-radius: $radius-md;
+  border: 1px solid $border-color;
+  background: $surface;
+  color: $font-color;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover {
+    background: $surface-hover;
+  }
+
+  &.btn--primary {
+    background: $blue-color;
+    border-color: $blue-color;
+    color: #fff;
+
+    &:hover {
+      filter: brightness(0.95);
+    }
+  }
+}
+
+@media (max-width: 520px) {
+  .panel {
+    padding: 1.25rem;
+  }
+  h1 {
+    font-size: 1.35rem;
+  }
+}
+</style>
 
 
