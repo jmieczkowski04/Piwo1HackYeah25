@@ -1,0 +1,4057 @@
+==== ./.env ====
+# VITE_API_URL=http://localhost:8080
+
+
+==== ./.prettierrc.json ====
+{
+  "$schema": "https://json.schemastore.org/prettierrc",
+  "semi": false,
+  "singleQuote": true,
+  "printWidth": 100
+}
+
+
+==== ./jsconfig.json ====
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist"]
+}
+
+
+==== ./output.txt ====
+
+
+==== ./package.json ====
+{
+  "name": "frontend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "format": "prettier --write src/"
+  },
+  "dependencies": {
+    "pinia": "^3.0.3",
+    "vue": "^3.5.22",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "axios": "^1.12.2",
+    "prettier": "3.6.2",
+    "sass": "^1.93.2",
+    "vite": "^7.1.7",
+    "vite-plugin-vue-devtools": "^8.0.2"
+  }
+}
+
+
+==== ./vite.config.js ====
+import { fileURLToPath, URL } from 'node:url'
+
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import vueDevTools from 'vite-plugin-vue-devtools'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [vue(), vueDevTools()],
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@use "@/assets/variables.scss" as *;`,
+      },
+    },
+  },
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+  server: {
+    proxy: {
+      '/api': { target: 'http://localhost:8080', changeOrigin: true },
+    },
+  },
+})
+
+
+==== ./data\endpoints\endpoints.txt ====
+User
+    GET /user/:user_id
+    bez niego zwraca dane aktualnego, z nim docelowego
+
+    GET/POST /user/:user_id/localization
+    ustalenie użytkowników
+
+    GET /events/all/users/:user_id
+    wyświetli eventy, które widzi user. Wolontariusz widzi swoje,
+    koordynator widzi swoich wolontariuszy, organizator widzi swoje,
+    admin posiada wszystkie
+
+    Opinions
+      POST /user/:user_id/opinion
+
+      GET/PATCH/DEL /user/:user_id/opinion/:opinion_id
+
+    Notifications
+      POST /user/:user_id/notification
+
+      GET/PATCH/DEL /user/:user_id/notification/:notification_id
+
+TASK
+
+    GET /group/:group_id/user/free
+    użytkownicy nieprzypisani do tasków
+
+    POST /group/:group_id/task
+
+    GET/PATCH/DEL /group/:group_id/task/:task_id
+
+    POST /group/:group_id/task/:task_id/user
+
+    GET/DEL /group/:group_id/task/:task_id/user/:user_id
+    pobieranie i usuwanie usera do taska
+
+Certificates/Chat
+
+    GET /event/:event_id/user/:user_id
+    pobieranie certyfikatu
+
+    GET/POST /event/:event_id/user/:user_id/chat
+    /tutaj endpointy do obsługi czatu koord - org
+
+Event
+    POST /event
+
+    GET/PATCH/DEL /event/:event_id
+
+    GET /event/unconfirmed
+
+    POST /event/:event_id/confirm
+
+Group
+
+    POST /event/:event_id/group
+
+    GET/PATCH/DEL /event/:event_id/group/:group_id
+
+    DELETE/POST/GET /event/:event_id/group/:group_id/user/:user_id
+    usuwa usera z grupy
+    dodaje usera do group
+
+
+Alerts
+    POST /event/:event_id/alert
+
+    GET/PATCH/DEL /event/:event_id/alert/alert_id
+
+Org
+    POST /institution
+    Tworzy organizacje
+
+    GET/PATCH/DEL /institution/:institution_id
+
+    GET /institution/unconfirmed
+    zwraca organizacje czekające na zatwierdzenie
+
+    POST /institution/:institution_id/confirm
+
+    POST/GET/PATCH/DEL /institution/:institution_id/user/:user_id
+
+
+Specjalne user_id = me, czyli bierzemy user id z tokena login gov
+
+
+==== ./data\types\alert.json ====
+{
+  "id": "string",
+  "user_id": "string",
+  "event_id": "string",
+  "type": "string",
+  "condition": "string"
+}
+
+
+==== ./data\types\chat.json ====
+{
+  "chat_id": "evt-101:u-3",
+  "event_id": "evt-101",
+  "participants": [
+    { "user_id": "u-3", "role": "VOLUNTEER", "display_name": "Wolontariusz Anna" },
+    { "user_id": "org-22", "role": "ORGANIZER", "display_name": "Organizator Marek" }
+  ],
+  "last_seen": {
+    "u-3": "2025-10-05T08:15:02.121Z",
+    "org-22": "2025-10-05T08:18:55.331Z"
+  },
+  "messages": [
+    {
+      "id": "m-1",
+      "ts": "2025-10-05T07:59:12.003Z",
+      "sender_id": "u-3",
+      "text": "Dzień dobry! Czy mogę zamienić zmianę na popołudniową?",
+      "meta": { "delivered": true, "read_at": "2025-10-05T08:03:20.000Z" }
+    },
+    {
+      "id": "m-2",
+      "ts": "2025-10-05T08:04:10.910Z",
+      "sender_id": "org-22",
+      "text": "Hej! Tak, spróbujemy to ogarnąć. Którą godzinę wolisz?",
+      "meta": { "delivered": true }
+    },
+    {
+      "id": "m-3",
+      "ts": "2025-10-05T08:06:42.410Z",
+      "sender_id": "u-3",
+      "text": "16:00–20:00 byłoby idealnie.",
+      "meta": { "delivered": true }
+    }
+  ]
+}
+
+
+==== ./data\types\event.json ====
+{
+  "id": "string",
+  "name": "string",
+  "description": "string",
+  "status": "string",
+  "institution_id": "string",
+  "groups": [
+    {
+      "id": "string"
+    }
+  ],
+  "start_date": "string",
+  "end_date": "string"
+}
+
+
+==== ./data\types\group.json ====
+{
+  "id": "string",
+  "name": "string",
+  "description": "string",
+  "admin_id": "string",
+  "parent_group_id": "string",
+  "institution_id": "string",
+  "location": {
+    "lat": "number",
+    "lng": "number"
+  },
+  "groups": [
+    {
+      "id": "string"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "string"
+    }
+  ]
+}
+
+
+==== ./data\types\institution.json ====
+{
+  "id": "string",
+  "name": "string",
+  "description": "string",
+  "status": "string",
+  "admins": [
+    {
+      "id": "string"
+    }
+  ],
+  "events": [
+    {
+      "id": "string"
+    }
+  ]
+}
+
+
+==== ./data\types\notification.json ====
+{
+  "id": "string",
+  "user_id": "string",
+  "type": "string",
+  "condition": "string"
+}
+
+
+==== ./data\types\opinion.json ====
+{
+  "id": "string",
+  "group_id": "string",
+  "rating": "number",
+  "comment": "string"
+}
+
+
+==== ./data\types\task.json ====
+{
+  "id": "string",
+  "name": "string",
+  "description": "string",
+  "group_id": "string",
+  "start_date": "string",
+  "end_date": "string",
+  "location": {
+    "lat": "number",
+    "lng": "number"
+  },
+  "users": [
+    {
+      "id": "string"
+    }
+  ]
+}
+
+
+==== ./data\types\user.json ====
+{
+  "id": "string",
+  "coordinates": {
+    "lat": "number",
+    "lng": "number"
+  },
+  "events": [
+    {
+      "id": "string"
+    }
+  ],
+  "opinions": [
+    {
+      "id": "string"
+    }
+  ]
+}
+
+
+==== ./src\App.vue ====
+<template>
+  <MainView />
+</template>
+
+<script setup>
+import MainView from '@/views/MainView.vue'
+</script>
+
+<style scoped></style>
+
+
+==== ./src\main.js ====
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import './assets/main.scss'
+import App from './App.vue'
+import router from './router'
+
+const app = createApp(App)
+
+app.use(createPinia())
+app.use(router)
+
+app.mount('#app')
+
+
+==== ./src\api\alert.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// POST /event/:eventId/alert
+export const createAlert = (eventId, body) => api.post(ep.alert(eventId), body)
+
+// GET/PATCH/DEL /event/:eventId/alert/:alertId
+export const getAlert = (eventId, alertId) => api.get(ep.alertGet(eventId, alertId))
+export const updateAlert = (eventId, alertId, body) =>
+  api.patch(ep.alertGet(eventId, alertId), body)
+export const deleteAlert = (eventId, alertId) => api.delete(ep.alertGet(eventId, alertId))
+
+
+==== ./src\api\axios.js ====
+import axios from 'axios'
+
+const baseURL = import.meta.env.VITE_API_URL || '/api'
+
+const api = axios.create({
+  baseURL,
+  timeout: 15000,
+  withCredentials: false, // TODO zmień na true jeśli backend ustawia cookies
+})
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers = config.headers || {}
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+api.interceptors.response.use(
+  (res) => res.data,
+  async (error) => {
+    const status = error?.response?.status
+    const message =
+      error?.response?.data?.message || error?.message || `${status || ''} request error`
+    return Promise.reject(new Error(message))
+  },
+)
+
+api.interceptors.response.use(
+  (res) => res.data,
+  (error) => {
+    const status = error?.response?.status
+    if (status === 401) {
+      localStorage.removeItem('token')
+    }
+    const message =
+      error?.response?.data?.message || error?.message || `${status || ''} request error`
+    return Promise.reject(new Error(message))
+  },
+)
+
+export default api
+
+
+==== ./src\api\certificate.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// GET /event/:eventId/user/:userId
+export const getCertificate = (eventId, userId, params = {}) =>
+  api.get(ep.certificate(eventId, userId), { params })
+
+// Gdy backend zwraca PDF/plik – odbierz jako blob:
+export const getCertificateFile = (eventId, userId, params = {}) =>
+  api.get(ep.certificate(eventId, userId), { params, responseType: 'blob' })
+
+
+==== ./src\api\chat.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// GET /event/:eventId/user/:userId/chat
+export const getChat = (eventId, userId, params = {}) =>
+  api.get(ep.chat(eventId, userId), { params })
+
+// POST /event/:eventId/user/:userId/chat
+export const sendChatMessage = (eventId, userId, body) => api.post(ep.chat(eventId, userId), body)
+
+
+==== ./src\api\endpoints.js ====
+export const ep = {
+  //User
+  me: () => '/user/me',
+  user: (id) => `/user/${id}`,
+  userLocalization: (id) => `/user/${id}/localization`,
+  eventsForUser: (id) => `/events/all/users/${id}`,
+
+  // Opinions
+  opinion: (userId) => `/user/${userId}/opinion`,
+  opinionGet: (userId, opinionId) => `/user/${userId}/opinion/${opinionId}`,
+
+  // Notifications
+  notification: (userId) => `/user/${userId}/notification`,
+  notificationGet: (userId, id) => `/user/${userId}/notification/${id}`,
+
+  // Tasks
+  task: (groupId) => `/group/${groupId}/task`,
+  taskGet: (groupId, taskId) => `/group/${groupId}/task/${taskId}`,
+  taskUser: (groupId, taskId) => `/group/${groupId}/task/${taskId}/user`,
+  taskUserGet: (groupId, taskId, userId) => `/group/${groupId}/task/${taskId}/user/${userId}`,
+  groupUsersFree: (groupId) => `/group/${groupId}/user/free`,
+
+  // Certificates / Chat
+  certificate: (eventId, userId) => `/event/${eventId}/user/${userId}`,
+  chat: (eventId, userId) => `/event/${eventId}/user/${userId}/chat`,
+
+  // Events
+  event: () => `/event`,
+  eventGet: (eventId) => `/event/${eventId}`,
+  eventUnconfirmed: () => `/event/unconfirmed`,
+  eventConfirm: (eventId) => `/event/${eventId}/confirm`,
+
+  // Groups
+  eventGroup: (eventId) => `/event/${eventId}/group`,
+  eventGroupGet: (eventId, groupId) => `/event/${eventId}/group/${groupId}`,
+  eventGroupUser: (eventId, groupId) => `/event/${eventId}/group/${groupId}/user`,
+  eventGroupUserGet: (eventId, groupId, userId) =>
+    `/event/${eventId}/group/${groupId}/user/${userId}`,
+
+  // Alerts
+  alert: (eventId) => `/event/${eventId}/alert`,
+  alertGet: (eventId, alertId) => `/event/${eventId}/alert/${alertId}`,
+
+  // Institution
+  institution: () => `/institution`,
+  institutionGet: (id) => `/institution/${id}`,
+  institutionUnconfirmed: () => `/institution/unconfirmed`,
+  institutionConfirm: (id) => `/institution/${id}/confirm`,
+  institutionUser: (institutionId, userId) => `/institution/${institutionId}/user/${userId}`,
+}
+
+
+==== ./src\api\event.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// POST /event
+export const createEvent = (body) => api.post(ep.event(), body)
+
+// GET/PATCH/DEL /event/:eventId
+export const getEvent = (eventId) => api.get(ep.eventGet(eventId))
+export const updateEvent = (eventId, body) => api.patch(ep.eventGet(eventId), body)
+export const deleteEvent = (eventId) => api.delete(ep.eventGet(eventId))
+
+// GET /event/unconfirmed
+export const listUnconfirmedEvents = (params = {}) => api.get(ep.eventUnconfirmed(), { params })
+
+// POST /event/:eventId/confirm
+export const confirmEvent = (eventId) => api.post(ep.eventConfirm(eventId))
+
+
+==== ./src\api\group.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// POST /event/:eventId/group
+export const createGroupForEvent = (eventId, body) => api.post(ep.eventGroup(eventId), body)
+
+// GET/PATCH/DEL /event/:eventId/group/:groupId
+export const getEventGroup = (eventId, groupId) => api.get(ep.eventGroupGet(eventId, groupId))
+export const updateEventGroup = (eventId, groupId, body) =>
+  api.patch(ep.eventGroupGet(eventId, groupId), body)
+export const deleteEventGroup = (eventId, groupId) => api.delete(ep.eventGroupGet(eventId, groupId))
+
+// POST /event/:eventId/group/:groupId/user  (body: { user_id })
+// GET/DEL /event/:eventId/group/:groupId/user/:userId
+export const addUserToEventGroup = (eventId, groupId, userId) =>
+  api.post(ep.eventGroupUser(eventId, groupId), { user_id: userId })
+
+export const getUserInEventGroup = (eventId, groupId, userId) =>
+  api.get(ep.eventGroupUserGet(eventId, groupId, userId))
+
+export const removeUserFromEventGroup = (eventId, groupId, userId) =>
+  api.delete(ep.eventGroupUserGet(eventId, groupId, userId))
+
+
+==== ./src\api\institution.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// POST /institution
+export const createInstitution = (body) => api.post(ep.institution(), body)
+
+// GET/PATCH/DEL /institution/:id
+export const getInstitution = (id) => api.get(ep.institutionGet(id))
+export const updateInstitution = (id, body) => api.patch(ep.institutionGet(id), body)
+export const deleteInstitution = (id) => api.delete(ep.institutionGet(id))
+
+// GET /institution/unconfirmed
+export const listUnconfirmedInstitutions = (params = {}) =>
+  api.get(ep.institutionUnconfirmed(), { params })
+
+// POST /institution/:id/confirm
+export const confirmInstitution = (id) => api.post(ep.institutionConfirm(id))
+
+// POST/GET/PATCH/DEL /institution/:institutionId/user/:userId
+export const addUserToInstitution = (institutionId, userId, body = {}) =>
+  api.post(ep.institutionUser(institutionId, userId), body)
+
+export const getInstitutionUser = (institutionId, userId) =>
+  api.get(ep.institutionUser(institutionId, userId))
+
+export const updateInstitutionUser = (institutionId, userId, body) =>
+  api.patch(ep.institutionUser(institutionId, userId), body)
+
+export const removeUserFromInstitution = (institutionId, userId) =>
+  api.delete(ep.institutionUser(institutionId, userId))
+
+
+==== ./src\api\notification.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// POST /user/:userId/notification
+export const createNotification = (userId, body) => api.post(ep.notification(userId), body)
+
+// GET/PATCH/DEL /user/:userId/notification/:id
+export const getNotification = (userId, id) => api.get(ep.notificationGet(userId, id))
+export const updateNotification = (userId, id, body) =>
+  api.patch(ep.notificationGet(userId, id), body)
+export const deleteNotification = (userId, id) => api.delete(ep.notificationGet(userId, id))
+
+
+==== ./src\api\opinion.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// POST /user/:userId/opinion
+export const createOpinion = (userId, body) => api.post(ep.opinion(userId), body)
+
+// GET/PATCH/DEL /user/:userId/opinion/:opinionId
+export const getOpinion = (userId, opinionId) => api.get(ep.opinionGet(userId, opinionId))
+export const updateOpinion = (userId, opinionId, body) =>
+  api.patch(ep.opinionGet(userId, opinionId), body)
+export const deleteOpinion = (userId, opinionId) => api.delete(ep.opinionGet(userId, opinionId))
+
+
+==== ./src\api\task.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// GET /group/:groupId/user/free
+export const listFreeUsersForGroup = (groupId, params = {}) =>
+  api.get(ep.groupUsersFree(groupId), { params })
+
+// POST /group/:groupId/task
+export const createTask = (groupId, body) => api.post(ep.task(groupId), body)
+
+// GET/PATCH/DEL /group/:groupId/task/:taskId
+export const getTask = (groupId, taskId) => api.get(ep.taskGet(groupId, taskId))
+export const updateTask = (groupId, taskId, body) => api.patch(ep.taskGet(groupId, taskId), body)
+export const deleteTask = (groupId, taskId) => api.delete(ep.taskGet(groupId, taskId))
+
+// POST /group/:groupId/task/:taskId/user   (body: { user_id })
+export const addUserToTask = (groupId, taskId, userId) =>
+  api.post(ep.taskUser(groupId, taskId), { user_id: userId })
+
+// GET/DEL /group/:groupId/task/:taskId/user/:userId
+export const getUserOnTask = (groupId, taskId, userId) =>
+  api.get(ep.taskUserGet(groupId, taskId, userId))
+export const removeUserFromTask = (groupId, taskId, userId) =>
+  api.delete(ep.taskUserGet(groupId, taskId, userId))
+
+
+==== ./src\api\user.js ====
+import api from './axios.js'
+import { ep } from './endpoints.js'
+
+// /user/me
+export const getMe = () => api.get(ep.me())
+
+// /user/:id
+export const getUser = (id) => api.get(ep.user(id))
+
+// GET/POST /user/:id/localization
+export const getUserLocalization = (id) => api.get(ep.userLocalization(id))
+export const setUserLocalization = (id, body) => api.post(ep.userLocalization(id), body)
+
+// GET /events/all/users/:id
+export const listEventsForUser = (userId, params = {}) =>
+  api.get(ep.eventsForUser(userId), { params })
+
+
+==== ./src\assets\main.scss ====
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+* {
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+  text-decoration: none;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  transition:
+    color 0.2s,
+    background-color 0.2s;
+  color: $font-color;
+  background: $background-color;
+}
+
+a,
+a:visited {
+  color: inherit;
+  text-decoration: none;
+}
+a:hover {
+  color: $blue-color;
+}
+
+/* --- Karty / sekcje --- */
+.card {
+  background: $surface;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  padding: 1rem;
+}
+
+/* --- Przyciski (spójne z navbar/sidebarem) --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: $radius-md;
+  border: 1px solid $border-color;
+  background: $surface;
+  color: $font-color;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
+
+  &:hover {
+    background: $surface-hover;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+.btn--primary {
+  background: $blue-color;
+  color: #fff;
+  border-color: transparent;
+
+  &:hover {
+    filter: brightness(0.96);
+  }
+}
+
+.btn--danger {
+  background: $red-color;
+  color: #fff;
+  border-color: transparent;
+
+  &:hover {
+    filter: brightness(0.96);
+  }
+}
+
+/* --- Form controls --- */
+.input,
+.select,
+.textarea {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  background: $surface;
+  color: $font-color;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:focus {
+    outline: none;
+    border-color: $blue-color;
+    box-shadow: 0 0 0 3px rgba($blue-color, 0.12);
+  }
+}
+
+.select {
+  appearance: none;
+}
+
+/* --- Layout pomocniczy --- */
+.container-max {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.grid-gap {
+  display: grid;
+  gap: 1rem;
+}
+
+
+==== ./src\assets\variables.scss ====
+// BRAND (zostają tylko te dwa)
+$blue-color: #2f83c2;
+$red-color: #cc3960;
+
+// NEUTRALE (możemy dodawać)
+$font-color: #333;
+$muted-color: #666;
+$background-color: #f9f9f9;
+$surface: #ffffff;
+$surface-hover: #f3f4f6; // delikatne podświetlenie
+$border-color: #e5e7eb; // subtelny szary border
+$background-dark: #ece8e8; // zostawiam, jeśli używałeś
+
+// Promienie / cienie (neutralne)
+$radius-sm: 6px;
+$radius-md: 8px;
+$radius-lg: 12px;
+
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+
+==== ./src\components\browser\AdvertField.vue ====
+
+
+==== ./src\components\browser\MapField.vue ====
+
+
+==== ./src\components\browser\ResultsBar.vue ====
+
+
+==== ./src\components\dashboard\SettingsBar.vue ====
+<template>
+  <nav class="settings">
+    <RouterLink class="item" to="/dashboard/panel">Panel główny</RouterLink>
+
+    <RouterLink v-if="auth.isCoordinator" class="item" to="/dashboard/user">
+      Dane użytkownika
+    </RouterLink>
+
+    <RouterLink class="item" to="/dashboard/calendar">Kalendarz</RouterLink>
+    <RouterLink class="item" to="/dashboard/certificates">Zaświadczenia</RouterLink>
+    <RouterLink v-if="auth.isOrgAdmin || auth.isCoordinator" class="item" to="/dashboard/reports"
+      >Raporty</RouterLink
+    >
+
+    <div class="divider" role="separator"></div>
+
+    <RouterLink class="item" to="/dashboard/contact">Kontakt</RouterLink>
+
+    <RouterLink
+      v-if="auth.isOrgAdmin || auth.isGovAdmin"
+      class="item"
+      to="/dashboard/advert-publication"
+    >
+      Publikacja ogłoszeń
+    </RouterLink>
+
+    <RouterLink v-if="auth.isOrgAdmin" class="item" to="/dashboard/alert-settings">
+      Ustawienia alertów
+    </RouterLink>
+
+    <RouterLink
+      v-if="auth.isOrgAdmin || auth.isGovAdmin"
+      class="item"
+      to="/dashboard/application-management"
+    >
+      Zarządzanie zgłoszeniami
+    </RouterLink>
+
+    <RouterLink v-if="auth.isOrgAdmin || auth.isGovAdmin" class="item" to="/dashboard/opinions">
+      Opinie
+    </RouterLink>
+
+    <RouterLink v-if="auth.isGovAdmin" class="item" to="/dashboard/institution-verification">
+      Weryfikacja organizacji
+    </RouterLink>
+
+    <RouterLink v-if="auth.isGovAdmin" class="item" to="/dashboard/event-verification">
+      Weryfikacja wydarzeń
+    </RouterLink>
+
+    <RouterLink v-if="auth.isVolunteer" class="item" to="/dashboard/notification-settings">
+      Ustawienia powiadomień
+    </RouterLink>
+  </nav>
+</template>
+
+<script setup>
+import { useAuthStore } from '@/stores/auth.js'
+const auth = useAuthStore()
+</script>
+
+<style scoped lang="scss">
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  background: $surface;
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  padding: 0.5rem;
+}
+
+/* pojedynczy link */
+.item {
+  display: block;
+  padding: 0.6rem 0.75rem;
+  border-radius: $radius-sm;
+  color: $muted-color;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-left-color 120ms ease;
+
+  border-left: 3px solid transparent;
+
+  &:hover {
+    background: $surface-hover;
+    color: $font-color;
+  }
+
+  /* aktywny stan — działa też dla zagnieżdżonych tras */
+  &.router-link-active,
+  &.router-link-exact-active {
+    background: rgba($blue-color, 0.08);
+    color: $blue-color;
+    font-weight: 600;
+    border-left-color: $blue-color;
+  }
+}
+
+/* separator sekcji */
+.divider {
+  height: 1px;
+  background: $border-color;
+  margin: 0.35rem 0;
+}
+</style>
+
+
+==== ./src\components\dashboard\Categories\AllCalendar.vue ====
+<template>
+  <div class="calendar">
+    <header class="calendar__head">
+      <h2>Kalendarz wydarzeń</h2>
+      <p class="muted">
+        Widok zależy od roli.
+        {{ canManage ? 'Masz uprawnienia do zarządzania zadaniami.' : 'Podgląd tylko do odczytu.' }}
+      </p>
+    </header>
+
+    <div class="filters">
+      <button
+        class="btn"
+        :class="{ 'btn--primary': activeTab === 'upcoming' }"
+        @click="activeTab = 'upcoming'"
+      >
+        Nadchodzące
+      </button>
+      <button
+        class="btn"
+        :class="{ 'btn--primary': activeTab === 'past' }"
+        @click="activeTab = 'past'"
+      >
+        Zakończone
+      </button>
+    </div>
+
+    <div v-if="filtered.length === 0" class="empty card">Brak wydarzeń do wyświetlenia.</div>
+
+    <section v-for="ev in filtered" :key="ev.id" class="event card">
+      <div class="event__header">
+        <div>
+          <h3 class="event__title">{{ ev.name }}</h3>
+          <p class="muted">{{ ev.description }}</p>
+          <p class="muted">
+            {{ formatDate(ev.start_date) }} — {{ formatTime(ev.start_date) }} →
+            {{ formatTime(ev.end_date) }}
+          </p>
+        </div>
+        <span class="badge" :class="badgeClass(ev.status)">{{ ev.status }}</span>
+      </div>
+
+      <div class="event__groups">
+        <div v-for="grp in ev.groups" :key="grp.id" class="group">
+          <h4 class="group__title">{{ grp.name }}</h4>
+
+          <div class="tasks">
+            <div v-for="t in grp.tasks" :key="t.id" class="task">
+              <div class="task__main">
+                <div class="task__title">
+                  <strong>{{ t.name }}</strong>
+                  <span class="muted">
+                    {{ formatTime(t.start_date) }}–{{ formatTime(t.end_date) }}
+                  </span>
+                </div>
+                <div class="task__users">
+                  <span class="chip">
+                    Wolontariusze: <strong>{{ t.users?.length || 0 }}</strong>
+                  </span>
+                </div>
+              </div>
+
+              <div class="task__actions">
+                <template v-if="canManage">
+                  <button class="btn" @click="onAddUser(ev, grp, t)">Dodaj wolontariusza</button>
+                  <button class="btn btn--danger" @click="onRemoveUser(ev, grp, t)">
+                    Usuń z zadania
+                  </button>
+                </template>
+                <template v-else>
+                  <span class="muted">Tylko podgląd</span>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</template>
+
+<script setup>
+import { onMounted, ref, computed } from 'vue'
+import { useAuthStore, ROLE } from '@/stores/auth.js'
+import { listEventsForUser } from '@/api/user.js'
+import { mockEventsForUser } from '@/mocks/events.js'
+
+const auth = useAuthStore()
+const loading = ref(false)
+const error = ref('')
+const events = ref([])
+const activeTab = ref('upcoming') // 'upcoming' | 'past'
+
+const canManage = computed(
+  () => auth.currentRole === ROLE.ORG_ADMIN || auth.currentRole === ROLE.GOV_ADMIN,
+)
+
+onMounted(fetchEvents)
+
+async function fetchEvents() {
+  loading.value = true
+  error.value = ''
+  try {
+    const uid = auth.user?.id || 'me'
+    const data = await listEventsForUser(uid)
+    events.value = Array.isArray(data) ? data : data?.events || []
+  } catch (e) {
+    // Fallback na mocki
+    console.warn('GET /events/all/users/:id fallback -> mock:', e?.message || e)
+    events.value = mockEventsForUser()
+  } finally {
+    loading.value = false
+  }
+}
+
+const filtered = computed(() => {
+  const now = Date.now()
+  const arr = (events.value || [])
+    .slice()
+    .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
+  if (activeTab.value === 'upcoming') {
+    return arr.filter((e) => new Date(e.end_date).getTime() >= now)
+  }
+  return arr.filter((e) => new Date(e.end_date).getTime() < now).reverse()
+})
+
+function formatDate(iso) {
+  const d = new Date(iso)
+  return d.toLocaleDateString()
+}
+function formatTime(iso) {
+  const d = new Date(iso)
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+function badgeClass(status) {
+  return status === 'CONFIRMED' ? 'badge--ok' : status === 'FINISHED' ? 'badge--muted' : ''
+}
+
+// Placeholdery akcji (API będzie to robić potem)
+// ORG_ADMIN + GOV_ADMIN tylko widzą te przyciski
+function onAddUser(ev, grp, t) {
+  alert(`(mock) Dodaj wolontariusza → ${ev.name} / ${grp.name} / ${t.name}`)
+}
+function onRemoveUser(ev, grp, t) {
+  alert(`(mock) Usuń wolontariusza → ${ev.name} / ${grp.name} / ${t.name}`)
+}
+</script>
+
+<style scoped lang="scss">
+.calendar__head {
+  margin-bottom: 0.5rem;
+
+  .muted {
+    color: $muted-color;
+  }
+}
+
+.filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.event {
+  margin-bottom: 1rem;
+}
+
+.event__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+
+  .event__title {
+    margin: 0 0 0.2rem 0;
+  }
+  .muted {
+    color: $muted-color;
+    margin: 0.1rem 0;
+  }
+}
+
+.event__groups {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.group {
+  border: 1px dashed $border-color;
+  border-radius: $radius-md;
+  padding: 0.75rem;
+
+  .group__title {
+    margin: 0 0 0.5rem 0;
+  }
+}
+
+.tasks {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.task {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  padding: 0.6rem;
+  background: $surface;
+
+  .task__main {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .task__title {
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+
+    .muted {
+      color: $muted-color;
+      font-size: 0.95rem;
+    }
+  }
+
+  .task__users .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: $radius-sm;
+    background: $surface-hover;
+    border: 1px solid $border-color;
+    font-size: 0.9rem;
+    color: $muted-color;
+  }
+
+  .task__actions {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: $radius-sm;
+  border: 1px solid $border-color;
+  background: $surface-hover;
+  color: $muted-color;
+  font-weight: 600;
+  font-size: 0.85rem;
+
+  &.badge--ok {
+    background: rgba($blue-color, 0.08);
+    border-color: rgba($blue-color, 0.3);
+    color: $blue-color;
+  }
+  &.badge--muted {
+    opacity: 0.75;
+  }
+}
+</style>
+
+
+==== ./src\components\dashboard\Categories\AllCertificates.vue ====
+<template>
+  <div class="certs">
+    <header class="certs__head">
+      <h2>Generowanie certyfikatów</h2>
+      <p class="muted">
+        {{ roleHint }}
+      </p>
+    </header>
+
+    <div class="card grid-gap">
+      <!-- Wybór użytkownika -->
+      <div class="row">
+        <label class="lbl">Użytkownik</label>
+        <div class="stack">
+          <select class="select" v-model="selectedUserId" :disabled="userLocked">
+            <option v-for="u in usersOptions" :key="u.id" :value="u.id">{{ u.name }}</option>
+          </select>
+          <small class="muted" v-if="userLocked"
+            >Jako wolontariusz generujesz tylko dla siebie.</small
+          >
+        </div>
+      </div>
+
+      <!-- Wybór wydarzenia (zależny od użytkownika; tylko zakończone z udziałem) -->
+      <div class="row">
+        <label class="lbl">Wydarzenie</label>
+        <div class="stack">
+          <select class="select" v-model="selectedEventId">
+            <option v-if="eligibleEvents.length === 0" disabled value="">
+              Brak zakończonych wydarzeń dla wybranego użytkownika
+            </option>
+            <option v-for="e in eligibleEvents" :key="e.id" :value="e.id">
+              {{ e.name }} — {{ formatDate(e.end_date) }}
+            </option>
+          </select>
+          <small class="muted"
+            >Certyfikat dostępny tylko dla zakończonych wydarzeń, w których użytkownik brał
+            udział.</small
+          >
+        </div>
+      </div>
+
+      <!-- Akcja -->
+      <div class="row">
+        <button class="btn btn--primary" :disabled="!canGenerate" @click="generate">
+          Generuj certyfikat (PDF)
+        </button>
+        <span v-if="loading" class="muted">Generuję…</span>
+      </div>
+    </div>
+
+    <!-- Podgląd -->
+    <section class="history">
+      <h3>Wydarzenia kwalifikujące się do certyfikatu</h3>
+      <div class="list" v-if="eligibleEvents.length">
+        <div class="item" v-for="e in eligibleEvents" :key="e.id">
+          <div class="meta">
+            <strong>{{ e.name }}</strong>
+            <span class="muted">Zakończone: {{ formatDate(e.end_date) }}</span>
+          </div>
+          <button class="btn" @click="quickPick(e.id)">Wybierz</button>
+        </div>
+      </div>
+      <p v-else class="muted">Brak pozycji.</p>
+    </section>
+  </div>
+</template>
+
+<script setup>
+import { computed, onMounted, ref, watch } from 'vue'
+import { useAuthStore, ROLE } from '@/stores/auth.js'
+import { getCertificateFile } from '@/api/certificate.js'
+import {
+  mockUsers,
+  mockEvents,
+  mockEligibleEventsForUser,
+  mockCoordinatorVolunteers,
+  mockOrganizerVolunteers,
+  mockAllVolunteers,
+  mockCertificateBlob,
+} from '@/mocks/certificates.js'
+
+const auth = useAuthStore()
+
+const usersOptions = ref([])
+const selectedUserId = ref('')
+const selectedEventId = ref('')
+const loading = ref(false)
+
+// mock
+const events = ref(mockEvents)
+
+const role = computed(() => auth.currentRole)
+const userLocked = computed(() => role.value === ROLE.VOLUNTEER)
+
+const roleHint = computed(() => {
+  if (role.value === ROLE.VOLUNTEER)
+    return 'Wolontariusz: możesz generować certyfikaty tylko dla siebie.'
+  if (role.value === ROLE.COORDINATOR)
+    return 'Koordynator: możesz generować certyfikaty dla wolontariuszy, których zgłaszałeś.'
+  if (role.value === ROLE.ORG_ADMIN)
+    return 'Organizator: możesz generować certyfikaty dla wolontariuszy ze swoich wydarzeń.'
+  if (role.value === ROLE.GOV_ADMIN)
+    return 'Admin: możesz generować certyfikaty dla każdego wolontariusza.'
+  return ''
+})
+
+function buildUsersOptions() {
+  const me = auth.user?.id || 'u-1'
+  if (role.value === ROLE.VOLUNTEER) {
+    const self = mockUsers.find((u) => u.id === me) || { id: me, name: 'Ja' }
+    usersOptions.value = [self]
+    selectedUserId.value = self.id
+  } else if (role.value === ROLE.COORDINATOR) {
+    usersOptions.value = mockCoordinatorVolunteers(auth.user?.id).map((u) => ({
+      id: u.id,
+      name: u.name,
+    }))
+    selectedUserId.value ||= usersOptions.value[0]?.id || ''
+  } else if (role.value === ROLE.ORG_ADMIN) {
+    usersOptions.value = mockOrganizerVolunteers(auth.user?.id).map((u) => ({
+      id: u.id,
+      name: u.name,
+    }))
+    selectedUserId.value ||= usersOptions.value[0]?.id || ''
+  } else if (role.value === ROLE.GOV_ADMIN) {
+    usersOptions.value = mockAllVolunteers().map((u) => ({ id: u.id, name: u.name }))
+    selectedUserId.value ||= usersOptions.value[0]?.id || ''
+  } else {
+    // fallback
+    usersOptions.value = mockUsers
+    selectedUserId.value ||= usersOptions.value[0]?.id || ''
+  }
+}
+
+onMounted(() => {
+  buildUsersOptions()
+})
+
+// jeśli zmieni się rola / user – przebuduj listę
+watch(() => role.value, buildUsersOptions)
+watch(() => auth.user?.id, buildUsersOptions)
+
+const eligibleEvents = computed(() => {
+  return selectedUserId.value ? mockEligibleEventsForUser(selectedUserId.value) : []
+})
+
+watch(eligibleEvents, (list) => {
+  if (!list.find((e) => e.id === selectedEventId.value)) {
+    selectedEventId.value = list[0]?.id || ''
+  }
+})
+
+function formatDate(iso) {
+  const d = new Date(iso)
+  return d.toLocaleDateString()
+}
+
+function quickPick(eventId) {
+  selectedEventId.value = eventId
+}
+
+const canGenerate = computed(() => !!selectedUserId.value && !!selectedEventId.value)
+
+async function generate() {
+  if (!canGenerate.value) return
+  loading.value = true
+  try {
+    const ev = eligibleEvents.value.find((e) => e.id === selectedEventId.value)
+    const usr = usersOptions.value.find((u) => u.id === selectedUserId.value)
+
+    try {
+      const blob = await getCertificateFile(ev.id, usr.id)
+      triggerDownload(blob, fileName(ev, usr))
+    } catch (realErr) {
+      console.warn('getCertificateFile failed, using mock:', realErr?.message || realErr)
+      // Fallback – lokalny „PDF”
+      const blob = mockCertificateBlob({ event: ev, user: usr })
+      triggerDownload(blob, fileName(ev, usr))
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+function fileName(ev, usr) {
+  const safe = (s) =>
+    String(s || '')
+      .replace(/[^\p{L}\p{N}\-_ ]/gu, '')
+      .replace(/\s+/g, '_')
+  return `certyfikat_${safe(usr.name || usr.id)}_${safe(ev.name)}.pdf`
+}
+
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+</script>
+
+<style scoped lang="scss">
+.certs__head {
+  margin-bottom: 0.75rem;
+  .muted {
+    color: $muted-color;
+  }
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 0.75rem;
+  align-items: center;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lbl {
+  font-weight: 600;
+}
+
+.stack {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.history {
+  margin-top: 1rem;
+
+  h3 {
+    margin: 0 0 0.5rem 0;
+  }
+
+  .list {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid $border-color;
+    border-radius: $radius-md;
+    background: $surface;
+
+    .meta {
+      display: grid;
+      gap: 0.15rem;
+      .muted {
+        color: $muted-color;
+      }
+    }
+  }
+}
+</style>
+
+
+==== ./src\components\dashboard\Categories\AllDashboard.vue ====
+<template>
+  <div class="dash">
+    <header class="dash__head">
+      <h2>Panel główny</h2>
+      <p class="muted">Szybki podgląd najważniejszych rzeczy na dziś.</p>
+    </header>
+
+    <div class="grid">
+      <!-- 1) Nadchodzące dyżury / zadania -->
+      <section class="card">
+        <div class="card__head">
+          <h3>Nadchodzące dyżury</h3>
+          <RouterLink class="btn" to="/dashboard/calendar">Kalendarz</RouterLink>
+        </div>
+
+        <template v-if="upcomingShifts.length">
+          <ul class="list">
+            <li v-for="it in upcomingShifts.slice(0, 6)" :key="it.key" class="row">
+              <div class="left">
+                <strong class="title">{{ it.eventName }}</strong>
+                <div class="sub muted">{{ it.groupName }} • {{ it.taskName }}</div>
+              </div>
+              <div class="right">
+                <span class="chip">
+                  {{ dDate(it.start) }} • {{ dTime(it.start) }}–{{ dTime(it.end) }}
+                </span>
+              </div>
+            </li>
+          </ul>
+        </template>
+        <p v-else class="muted">Brak nadchodzących dyżurów.</p>
+      </section>
+
+      <!-- 2) Do potwierdzenia: wydarzenia (ORG_ADMIN/GOV_ADMIN) -->
+      <section class="card" v-if="auth.isOrgAdmin || auth.isGovAdmin">
+        <div class="card__head">
+          <h3>Wydarzenia do potwierdzenia</h3>
+          <RouterLink class="btn" to="/dashboard/event-verification">Weryfikuj</RouterLink>
+        </div>
+
+        <template v-if="unconfirmedEvents.length">
+          <ul class="list">
+            <li v-for="e in unconfirmedEvents.slice(0, 5)" :key="e.id" class="row">
+              <div class="left">
+                <strong class="title">{{ e.name }}</strong>
+                <div class="sub muted">ID: {{ e.id }}</div>
+              </div>
+              <div class="right"><span class="badge">UNCONFIRMED</span></div>
+            </li>
+          </ul>
+        </template>
+        <p v-else class="muted">Brak oczekujących wydarzeń.</p>
+      </section>
+
+      <!-- 3) Do weryfikacji: organizacje (GOV_ADMIN) -->
+      <section class="card" v-if="auth.isGovAdmin">
+        <div class="card__head">
+          <h3>Organizacje do weryfikacji</h3>
+          <RouterLink class="btn" to="/dashboard/institution-verification">Weryfikuj</RouterLink>
+        </div>
+
+        <template v-if="unconfirmedInstitutions.length">
+          <ul class="list">
+            <li v-for="inst in unconfirmedInstitutions.slice(0, 5)" :key="inst.id" class="row">
+              <div class="left">
+                <strong class="title">{{ inst.name }}</strong>
+                <div class="sub muted">ID: {{ inst.id }}</div>
+              </div>
+              <div class="right"><span class="badge">PENDING</span></div>
+            </li>
+          </ul>
+        </template>
+        <p v-else class="muted">Brak oczekujących organizacji.</p>
+      </section>
+
+      <!-- 4) Ostatnie rozmowy (chat) -->
+      <section class="card">
+        <div class="card__head">
+          <h3>Ostatnie rozmowy</h3>
+          <RouterLink class="btn" to="/dashboard/contact">Otwórz czat</RouterLink>
+        </div>
+
+        <template v-if="chatPreviews.length">
+          <ul class="list">
+            <li v-for="c in chatPreviews" :key="c.chat_id" class="row">
+              <div class="left">
+                <strong class="title">{{ c.eventName }}</strong>
+                <div class="sub muted truncate">
+                  {{ c.last?.senderLabel }}: {{ c.last?.text || '—' }}
+                </div>
+              </div>
+              <div class="right">
+                <span class="chip" v-if="c.last"
+                  >{{ dDate(c.last.ts) }} • {{ dTime(c.last.ts) }}</span
+                >
+              </div>
+            </li>
+          </ul>
+        </template>
+        <p v-else class="muted">Brak rozmów do podglądu.</p>
+      </section>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { computed, onMounted, ref } from 'vue'
+import { useAuthStore } from '@/stores/auth.js'
+import { listEventsForUser } from '@/api/user.js'
+import { listUnconfirmedEvents } from '@/api/event.js'
+import { listUnconfirmedInstitutions } from '@/api/institution.js'
+import { getChat } from '@/api/chat.js'
+import { mockEventsForUser } from '@/mocks/events.js'
+import { getChatMock } from '@/mocks/chat.js'
+
+const auth = useAuthStore()
+
+const eventsRaw = ref([])
+const unconfirmedEvents = ref([])
+const unconfirmedInstitutions = ref([])
+const chatPreviews = ref([])
+
+onMounted(async () => {
+  await loadEvents()
+  await Promise.allSettled([loadUnconfirmedEvents(), loadUnconfirmedInstitutions()])
+  await loadChatPreviews()
+})
+
+async function loadEvents() {
+  try {
+    const uid = auth.user?.id || 'me'
+    const data = await listEventsForUser(uid)
+    eventsRaw.value = Array.isArray(data) ? data : data?.events || []
+  } catch (e) {
+    console.warn('events fallback -> mock:', e?.message || e)
+    eventsRaw.value = mockEventsForUser()
+  }
+}
+
+async function loadUnconfirmedEvents() {
+  if (!(auth.isOrgAdmin || auth.isGovAdmin)) {
+    unconfirmedEvents.value = []
+    return
+  }
+  try {
+    const data = await listUnconfirmedEvents()
+    unconfirmedEvents.value = Array.isArray(data) ? data : data?.events || []
+  } catch {
+    unconfirmedEvents.value = []
+  }
+}
+
+async function loadUnconfirmedInstitutions() {
+  if (!auth.isGovAdmin) {
+    unconfirmedInstitutions.value = []
+    return
+  }
+  try {
+    const data = await listUnconfirmedInstitutions()
+    unconfirmedInstitutions.value = Array.isArray(data) ? data : data?.institutions || []
+  } catch {
+    unconfirmedInstitutions.value = []
+  }
+}
+
+async function loadChatPreviews() {
+  const uid = auth.user?.id || 'u-1'
+  const top = (eventsRaw.value || [])
+    .slice()
+    .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
+    .slice(0, 3)
+
+  const calls = top.map(async (ev) => {
+    try {
+      const doc = await getChat(ev.id, uid)
+      return toPreview(ev, doc)
+    } catch (e) {
+      // fallback do mocka – zgodny format
+      const doc = getChatMock(ev.id, uid)
+      return toPreview(ev, doc)
+    }
+  })
+
+  const settled = await Promise.allSettled(calls)
+  chatPreviews.value = settled
+    .filter((s) => s.status === 'fulfilled')
+    .map((s) => s.value)
+    .sort((a, b) => new Date(b.last?.ts || 0) - new Date(a.last?.ts || 0))
+}
+
+function toPreview(event, chatDoc) {
+  const last = (chatDoc?.messages || [])
+    .slice()
+    .sort((a, b) => new Date(a.ts) - new Date(b.ts))
+    .pop()
+  const participants = Object.fromEntries((chatDoc?.participants || []).map((p) => [p.user_id, p]))
+  const sender = last ? participants[last.sender_id] : null
+  return {
+    chat_id: chatDoc?.chat_id || `${event.id}:${auth.user?.id || 'u-1'}`,
+    eventId: event.id,
+    eventName: event.name,
+    last: last
+      ? {
+          ...last,
+          senderLabel:
+            last.sender_id === (auth.user?.id || 'u-1')
+              ? 'Ty'
+              : sender?.display_name || last.sender_id,
+        }
+      : null,
+  }
+}
+
+const upcomingShifts = computed(() => {
+  const now = Date.now()
+  const me = auth.user?.id || 'u-1'
+
+  // W mockach: użytkownik jest na niektórych taskach
+  const items = []
+  for (const ev of eventsRaw.value || []) {
+    for (const g of ev.groups || []) {
+      for (const t of g.tasks || []) {
+        const start = new Date(t.start_date).getTime()
+        const end = new Date(t.end_date).getTime()
+        const imOnIt = (t.users || []).some((u) => u.id === me)
+        if (imOnIt && end > now) {
+          items.push({
+            key: `${ev.id}|${g.id}|${t.id}`,
+            eventName: ev.name,
+            groupName: g.name,
+            taskName: t.name,
+            start: t.start_date,
+            end: t.end_date,
+          })
+        }
+      }
+    }
+  }
+  return items.sort((a, b) => new Date(a.start) - new Date(b.start))
+})
+
+function dDate(iso) {
+  const d = new Date(iso)
+  return d.toLocaleDateString()
+}
+function dTime(iso) {
+  const d = new Date(iso)
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+</script>
+
+<style scoped lang="scss">
+.dash__head {
+  margin-bottom: 0.75rem;
+  .muted {
+    color: $muted-color;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+
+  & > .card:nth-child(1) {
+    grid-column: span 7;
+  }
+  & > .card:nth-child(2) {
+    grid-column: span 5;
+  }
+  & > .card:nth-child(3) {
+    grid-column: span 5;
+  }
+  & > .card:nth-child(4) {
+    grid-column: span 7;
+  }
+
+  @media (max-width: 1024px) {
+    & > .card {
+      grid-column: span 12;
+    }
+  }
+}
+
+.card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+
+  h3 {
+    margin: 0;
+  }
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  background: $surface;
+  & + .row {
+    margin-top: 0.5rem;
+  }
+}
+
+.left {
+  min-width: 0;
+}
+.title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sub {
+  font-size: 0.92rem;
+}
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: $radius-sm;
+  background: $surface-hover;
+  border: 1px solid $border-color;
+  font-size: 0.9rem;
+  color: $muted-color;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: $radius-sm;
+  border: 1px solid $border-color;
+  background: $surface-hover;
+  color: $muted-color;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+</style>
+
+
+==== ./src\components\dashboard\Categories\AllReports.vue ====
+<template>
+  <div class="reports">
+    <header class="head">
+      <h2>Raporty</h2>
+      <p class="muted">
+        <template v-if="auth.isOrgAdmin">
+          Admin organizacji: raport udziału i godzin pracy wolontariuszy w Twoich wydarzeniach.
+        </template>
+        <template v-else-if="auth.isCoordinator">
+          Koordynator: raport dla wolontariuszy, których zgłaszałeś / którymi zarządzasz.
+        </template>
+        <template v-else> Ten widok jest dostępny dla Koordynatora i Admina organizacji. </template>
+      </p>
+    </header>
+
+    <section v-if="canUse" class="card controls">
+      <div class="row">
+        <label class="lbl">Zakres dat</label>
+        <div class="range">
+          <input class="input" type="date" v-model="dateFrom" />
+          <span>—</span>
+          <input class="input" type="date" v-model="dateTo" />
+        </div>
+      </div>
+
+      <div class="row">
+        <label class="lbl">Agregacja</label>
+        <div class="range">
+          <label class="radio">
+            <input type="radio" value="VOLUNTEER" v-model="mode" /> według wolontariusza
+          </label>
+          <label class="radio">
+            <input type="radio" value="EVENT" v-model="mode" /> według wydarzenia
+          </label>
+        </div>
+      </div>
+
+      <div class="row">
+        <label class="lbl">Akcje</label>
+        <div class="actions">
+          <button class="btn" @click="recalculate" :disabled="loading">Przelicz</button>
+          <button class="btn" @click="exportCsv" :disabled="!rows.length">Eksport CSV</button>
+          <button class="btn btn--primary" @click="printView" :disabled="!rows.length">
+            Drukuj / PDF
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section v-if="canUse" class="card">
+      <div class="card__head">
+        <h3>Wyniki</h3>
+        <span v-if="loading" class="muted">Liczenie…</span>
+      </div>
+
+      <template v-if="rows.length">
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr v-if="mode === 'VOLUNTEER'">
+                <th>Wolontariusz</th>
+                <th class="num">Wydarzenia</th>
+                <th class="num">Zmiany</th>
+                <th class="num">Godziny</th>
+              </tr>
+              <tr v-else>
+                <th>Wydarzenie</th>
+                <th class="num">Wolontariusze</th>
+                <th class="num">Zmiany</th>
+                <th class="num">Godziny</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="r in rows" :key="r.key">
+                <td>{{ r.label }}</td>
+                <td class="num">{{ r.events }}</td>
+                <td class="num">{{ r.shifts }}</td>
+                <td class="num">{{ fmtHours(r.hours) }}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <th>Suma</th>
+                <th class="num">{{ total.events }}</th>
+                <th class="num">{{ total.shifts }}</th>
+                <th class="num">{{ fmtHours(total.hours) }}</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </template>
+
+      <p v-else class="muted">Brak danych w wybranym zakresie.</p>
+    </section>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue'
+import { useAuthStore, ROLE } from '@/stores/auth.js'
+
+// MOCKI – korzystamy z już istniejących
+import { mockEventsForUser } from '@/mocks/events.js'
+import {
+  mockUsers,
+  mockEvents as mockFinishedAndMixed,
+  mockCoordinatorVolunteers,
+  mockOrganizerVolunteers,
+} from '@/mocks/certificates.js'
+
+const auth = useAuthStore()
+const loading = ref(false)
+
+// Uprawnienia
+const canUse = computed(() => auth.isCoordinator || auth.isOrgAdmin)
+
+// Zakres dat
+const todayIso = () => new Date().toISOString().slice(0, 10)
+const isoShift = (days) => new Date(Date.now() + days * 86400000).toISOString().slice(0, 10)
+const dateFrom = ref(isoShift(-30))
+const dateTo = ref(todayIso())
+
+// Agregacja
+const mode = ref('VOLUNTEER') // 'VOLUNTEER' | 'EVENT'
+
+// Wynik
+const rows = ref([])
+const total = ref({ events: 0, shifts: 0, hours: 0 })
+
+onMounted(() => {
+  recalculate()
+})
+watch([dateFrom, dateTo, mode, () => auth.currentRole], () => recalculate())
+
+function recalculate() {
+  if (!canUse.value) return
+  loading.value = true
+  setTimeout(() => {
+    // W prawdziwym API:
+    //  - ORG_ADMIN: GET /events/all/users/me -> ale potrzebujemy eventów organizacji.
+    //    Tu w mocku użyjemy mockEvents z certificates.js i ograniczymy do inst-2 & inst-3.
+    //  - COORDINATOR: bierzemy jego wolontariuszy i eventy, w których są przypisani.
+    const { fromTs, toTs } = range()
+
+    if (auth.isOrgAdmin) {
+      // Załóżmy, że admin zarządza wydarzeniami z institution_id inst-2 & inst-3 (mock)
+      const instIds = new Set(['inst-2', 'inst-3'])
+      const events = mockFinishedAndMixed.filter((e) => instIds.has(e.institution_id))
+      buildStatsForOrg(events, fromTs, toTs)
+    } else if (auth.isCoordinator) {
+      const events = mergeUniqueEvents(mockEventsForUser(), mockFinishedAndMixed)
+      const vols = new Set(mockCoordinatorVolunteers(auth.user?.id).map((u) => u.id))
+      buildStatsForCoordinator(events, vols, fromTs, toTs)
+    }
+
+    loading.value = false
+  }, 0)
+}
+
+function range() {
+  const fromTs = dateFrom.value ? new Date(dateFrom.value + 'T00:00:00').getTime() : 0
+  const toTs = dateTo.value ? new Date(dateTo.value + 'T23:59:59').getTime() : Infinity
+  return { fromTs, toTs }
+}
+
+function inRange(startISO, endISO, fromTs, toTs) {
+  const s = new Date(startISO).getTime()
+  const e = new Date(endISO).getTime()
+  // liczymy overlap z wybranym zakresem
+  const start = Math.max(s, fromTs)
+  const end = Math.min(e, toTs)
+  return end > start ? { ok: true, start, end } : { ok: false }
+}
+
+function hoursBetween(start, end) {
+  return (end - start) / 3600000
+}
+
+function buildStatsForOrg(events, fromTs, toTs) {
+  // Agregacja po wolontariuszu lub wydarzeniu – zależnie od mode
+  const byVolunteer = new Map()
+  const byEvent = new Map()
+
+  for (const ev of events) {
+    let eventShifts = 0
+    let eventHours = 0
+    const eventVolunteerSet = new Set()
+
+    for (const g of ev.groups || []) {
+      for (const t of g.tasks || []) {
+        const ov = inRange(t.start_date, t.end_date, fromTs, toTs)
+        if (!ov.ok) continue
+        const h = hoursBetween(ov.start, ov.end)
+        const users = t.users || []
+
+        // EVENT agregacja
+        eventShifts += 1
+        eventHours += h
+        users.forEach((u) => eventVolunteerSet.add(u.id))
+
+        // VOLUNTEER agregacja
+        for (const u of users) {
+          const rec = byVolunteer.get(u.id) || {
+            key: u.id,
+            label: mockUsers.find((x) => x.id === u.id)?.name || u.id,
+            eventsSet: new Set(),
+            shifts: 0,
+            hours: 0,
+          }
+          rec.eventsSet.add(ev.id)
+          rec.shifts += 1
+          rec.hours += h
+          byVolunteer.set(u.id, rec)
+        }
+      }
+    }
+
+    if (eventShifts > 0 || eventHours > 0) {
+      const recE = {
+        key: ev.id,
+        label: ev.name,
+        events: 1,
+        shifts: eventShifts,
+        hours: eventHours,
+        volunteers: eventVolunteerSet.size,
+      }
+      byEvent.set(ev.id, recE)
+    }
+  }
+
+  if (mode.value === 'VOLUNTEER') {
+    rows.value = Array.from(byVolunteer.values()).map((r) => ({
+      key: r.key,
+      label: r.label,
+      events: r.eventsSet.size,
+      shifts: r.shifts,
+      hours: r.hours,
+    }))
+  } else {
+    rows.value = Array.from(byEvent.values()).map((r) => ({
+      key: r.key,
+      label: r.label,
+      events: 1,
+      shifts: r.shifts,
+      hours: r.hours,
+      volunteers: r.volunteers,
+    }))
+  }
+
+  summarize()
+}
+
+function buildStatsForCoordinator(events, volunteerIdSet, fromTs, toTs) {
+  const byVolunteer = new Map()
+  const byEvent = new Map()
+
+  for (const ev of events) {
+    let eventShifts = 0
+    let eventHours = 0
+    const eventVolunteerSet = new Set()
+
+    for (const g of ev.groups || []) {
+      for (const t of g.tasks || []) {
+        const ov = inRange(t.start_date, t.end_date, fromTs, toTs)
+        if (!ov.ok) continue
+        const h = hoursBetween(ov.start, ov.end)
+        const users = (t.users || []).filter((u) => volunteerIdSet.has(u.id))
+        if (!users.length) continue
+
+        // EVENT
+        eventShifts += 1
+        eventHours += h
+        users.forEach((u) => eventVolunteerSet.add(u.id))
+
+        // VOLUNTEER
+        for (const u of users) {
+          const rec = byVolunteer.get(u.id) || {
+            key: u.id,
+            label: mockUsers.find((x) => x.id === u.id)?.name || u.id,
+            eventsSet: new Set(),
+            shifts: 0,
+            hours: 0,
+          }
+          rec.eventsSet.add(ev.id)
+          rec.shifts += 1
+          rec.hours += h
+          byVolunteer.set(u.id, rec)
+        }
+      }
+    }
+
+    if (eventShifts > 0 || eventHours > 0) {
+      byEvent.set(ev.id, {
+        key: ev.id,
+        label: ev.name,
+        events: 1,
+        shifts: eventShifts,
+        hours: eventHours,
+        volunteers: eventVolunteerSet.size,
+      })
+    }
+  }
+
+  if (mode.value === 'VOLUNTEER') {
+    rows.value = Array.from(byVolunteer.values()).map((r) => ({
+      key: r.key,
+      label: r.label,
+      events: r.eventsSet.size,
+      shifts: r.shifts,
+      hours: r.hours,
+    }))
+  } else {
+    rows.value = Array.from(byEvent.values()).map((r) => ({
+      key: r.key,
+      label: r.label,
+      events: 1,
+      shifts: r.shifts,
+      hours: r.hours,
+      volunteers: r.volunteers,
+    }))
+  }
+
+  summarize()
+}
+
+function mergeUniqueEvents(a, b) {
+  const map = new Map()
+  for (const e of a || []) map.set(e.id, e)
+  for (const e of b || []) map.set(e.id, map.get(e.id) ? map.get(e.id) : e)
+  return Array.from(map.values())
+}
+
+function summarize() {
+  const evSum = rows.value.reduce((acc, r) => acc + (mode.value === 'VOLUNTEER' ? r.events : 1), 0)
+  const shSum = rows.value.reduce((acc, r) => acc + r.shifts, 0)
+  const hSum = rows.value.reduce((acc, r) => acc + r.hours, 0)
+  total.value = { events: evSum, shifts: shSum, hours: hSum }
+}
+
+function fmtHours(h) {
+  // 1 miejsce po przecinku, bez „,00”
+  const v = Math.round(h * 10) / 10
+  return Number.isInteger(v) ? v.toString() : v.toFixed(1)
+}
+
+// --- Eksport / Druk ---
+function exportCsv() {
+  if (!rows.value.length) return
+  const sep = ';'
+  const header =
+    mode.value === 'VOLUNTEER'
+      ? ['Wolontariusz', 'Wydarzenia', 'Zmiany', 'Godziny']
+      : ['Wydarzenie', 'Wolontariusze', 'Zmiany', 'Godziny']
+  const lines = [header.join(sep)]
+
+  for (const r of rows.value) {
+    if (mode.value === 'VOLUNTEER') {
+      lines.push(
+        [safe(r.label), r.events, r.shifts, fmtHours(r.hours)].map((x) => String(x)).join(sep),
+      )
+    } else {
+      lines.push(
+        [safe(r.label), r.volunteers ?? '', r.shifts, fmtHours(r.hours)]
+          .map((x) => String(x))
+          .join(sep),
+      )
+    }
+  }
+  // wiersz sumy
+  const sumRow =
+    mode.value === 'VOLUNTEER'
+      ? ['Suma', total.value.events, total.value.shifts, fmtHours(total.value.hours)]
+      : ['Suma', '', total.value.shifts, fmtHours(total.value.hours)]
+  lines.push(sumRow.join(sep))
+
+  const blob = new Blob([`\uFEFF${lines.join('\n')}`], { type: 'text/csv;charset=utf-8' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = csvFileName()
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(a.href)
+}
+
+function csvFileName() {
+  const role = auth.isOrgAdmin ? 'org' : auth.isCoordinator ? 'coord' : 'user'
+  return `raport_${role}_${mode.value.toLowerCase()}_${dateFrom.value}_${dateTo.value}.csv`
+}
+
+function safe(s) {
+  return String(s || '').replaceAll(';', ',')
+}
+
+function printView() {
+  window.print()
+}
+</script>
+
+<style scoped lang="scss">
+.head {
+  margin-bottom: 0.75rem;
+  .muted {
+    color: $muted-color;
+  }
+}
+
+.controls .row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 0.75rem;
+  align-items: center;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+.lbl {
+  font-weight: 600;
+}
+
+.range {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.radio {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin-right: 1rem;
+}
+
+.actions {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.table-wrap {
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid $border-color;
+  }
+  thead th {
+    text-align: left;
+    background: $surface-hover;
+    border-top: 1px solid $border-color;
+  }
+  tfoot th {
+    text-align: left;
+    border-top: 2px solid $border-color;
+  }
+  .num {
+    text-align: right;
+    width: 120px;
+    white-space: nowrap;
+  }
+}
+
+/* prosta wersja do druku */
+@media print {
+  .controls,
+  .navbar,
+  .settings,
+  .footer,
+  .actions {
+    display: none !important;
+  }
+  .dashboard-field {
+    border: none !important;
+  }
+  .table {
+    font-size: 12px;
+  }
+}
+</style>
+
+
+==== ./src\components\dashboard\Categories\AllUserData.vue ====
+<template>
+  <div class="new-vol">
+    <header class="head">
+      <h2>Zgłoszenie wolontariusza</h2>
+      <p class="muted">Koordynator: dodaj dane kandydata i przypisz go od razu do grupy.</p>
+    </header>
+
+    <form class="card grid-gap" @submit.prevent="onSubmit">
+      <div class="row">
+        <label class="lbl" for="firstName">Imię</label>
+        <input id="firstName" v-model.trim="form.firstName" class="input" required />
+      </div>
+
+      <div class="row">
+        <label class="lbl" for="lastName">Nazwisko</label>
+        <input id="lastName" v-model.trim="form.lastName" class="input" required />
+      </div>
+
+      <div class="row">
+        <label class="lbl" for="pesel">PESEL</label>
+        <input
+          id="pesel"
+          v-model.trim="form.pesel"
+          class="input"
+          maxlength="11"
+          inputmode="numeric"
+          placeholder="11 cyfr"
+          required
+        />
+        <small class="muted" v-if="form.pesel && !isPeselValid">Nieprawidłowy PESEL.</small>
+      </div>
+
+      <div class="row">
+        <label class="lbl" for="consent">Zgoda rodzica (skan)</label>
+        <input id="consent" type="file" class="input" accept=".pdf,image/*" @change="onFile" />
+        <small class="muted">PDF lub obraz (jpg/png). Opcjonalne, jeśli pełnoletni.</small>
+        <div v-if="fileName" class="fileinfo">
+          Wybrano: <strong>{{ fileName }}</strong>
+        </div>
+      </div>
+
+      <div class="row">
+        <label class="lbl" for="group">Przypisz do grupy</label>
+        <select id="group" class="select" v-model="selectedGroupKey" required>
+          <option disabled value="">— wybierz grupę —</option>
+          <option v-for="g in groups" :key="keyOf(g)" :value="keyOf(g)">
+            {{ g.eventName }} → {{ g.groupName }}
+          </option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn--primary" :disabled="submitting || !canSubmit">
+          {{ submitting ? 'Zgłaszanie…' : 'Zgłoś wolontariusza' }}
+        </button>
+        <span v-if="error" class="err">{{ error }}</span>
+        <span v-if="ok" class="ok">Zgłoszono (mock). W podglądzie poniżej masz szczegóły.</span>
+      </div>
+    </form>
+
+    <section class="preview card" v-if="lastPreview">
+      <h3>Podsumowanie zgłoszenia (mock)</h3>
+      <ul class="kv">
+        <li>
+          <span>Imię i nazwisko:</span><strong>{{ lastPreview.fullName }}</strong>
+        </li>
+        <li>
+          <span>PESEL:</span><strong>{{ lastPreview.pesel }}</strong>
+        </li>
+        <li>
+          <span>Grupa:</span>
+          <strong>{{ lastPreview.group.groupName }}</strong>
+          <small class="muted">({{ lastPreview.group.eventName }})</small>
+        </li>
+        <li>
+          <span>Plik zgody:</span><strong>{{ lastPreview.fileName || '—' }}</strong>
+        </li>
+        <li>
+          <span>Nadany ID (mock):</span><strong>{{ lastPreview.userId }}</strong>
+        </li>
+      </ul>
+    </section>
+  </div>
+</template>
+
+<script setup>
+import { computed, onMounted, ref } from 'vue'
+import { useAuthStore } from '@/stores/auth.js'
+import { mockGroupsForCoordinator } from '@/mocks/groups.js'
+// TODO: import { addUserToEventGroup } from '@/api/event.js'
+
+const auth = useAuthStore()
+
+const form = ref({
+  firstName: '',
+  lastName: '',
+  pesel: '',
+})
+const file = ref(null)
+const fileName = computed(() => file.value?.name || '')
+function onFile(e) {
+  const f = e.target.files?.[0]
+  file.value = f || null
+}
+
+// --- grupy (mock) ---
+const groups = ref([])
+onMounted(() => {
+  groups.value = mockGroupsForCoordinator(auth.user?.id)
+})
+const keyOf = (g) => `${g.eventId}|${g.groupId}`
+const selectedGroupKey = ref('')
+
+const isPeselValid = true
+
+// --- submit ---
+const submitting = ref(false)
+const error = ref('')
+const ok = ref(false)
+const lastPreview = ref(null)
+
+const canSubmit = computed(() => {
+  return form.value.firstName.trim() && form.value.lastName.trim() && selectedGroupKey.value
+})
+
+async function onSubmit() {
+  if (!canSubmit.value) return
+  submitting.value = true
+  error.value = ''
+  ok.value = false
+
+  try {
+    // 1) (TODO backend) Utworzenie użytkownika:
+    //    POST /user  -> { id }    (brak w spec – w mocku generujemy lokalne ID)
+    const userId = `mock-${Date.now().toString(36)}`
+
+    // 2) (TODO backend) Upload zgody rodzica:
+    //    np. POST /user/:userId/consent  multipart/form-data
+    //    W mocku tylko „udajemy” sukces.
+
+    // 3) Przypisanie do grupy:
+    const [eventId, groupId] = selectedGroupKey.value.split('|')
+
+    // Gdy backend gotowy:
+    // await addUserToEventGroup(eventId, groupId, userId)
+
+    const grp = groups.value.find((g) => g.eventId === eventId && g.groupId === groupId)
+    lastPreview.value = {
+      userId,
+      fullName: `${form.value.firstName} ${form.value.lastName}`,
+      pesel: form.value.pesel,
+      fileName: fileName.value,
+      group: grp,
+    }
+    ok.value = true
+
+    form.value.firstName = ''
+    form.value.lastName = ''
+    form.value.pesel = ''
+    file.value = null
+  } catch (e) {
+    error.value = e?.message || 'Coś poszło nie tak.'
+  } finally {
+    submitting.value = false
+  }
+}
+</script>
+
+<style scoped lang="scss">
+.head {
+  margin-bottom: 0.75rem;
+  .muted {
+    color: $muted-color;
+  }
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 0.75rem;
+  align-items: center;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lbl {
+  font-weight: 600;
+}
+
+.fileinfo {
+  font-size: 0.9rem;
+  color: $muted-color;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .err {
+    color: $red-color;
+  }
+  .ok {
+    color: $blue-color;
+  }
+}
+
+.preview {
+  margin-top: 1rem;
+
+  h3 {
+    margin: 0 0 0.5rem 0;
+  }
+
+  .kv {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 0.5rem;
+      padding: 0.35rem 0;
+
+      span {
+        color: $muted-color;
+      }
+
+      @media (max-width: 720px) {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}
+</style>
+
+
+==== ./src\components\dashboard\Categories\CoordContact.vue ====
+<template>
+  <div class="chat-page">
+    <header class="head">
+      <h2>Kontakt z organizatorem</h2>
+      <p class="muted">
+        Wybierz wydarzenie i rozmawiaj bezpośrednio z organizatorem. (Widoczne dla wolontariusza,
+        koordynatora i admina — czat dotyczy wybranego eventu).
+      </p>
+    </header>
+
+    <div class="card picker">
+      <label for="eventSel" class="lbl">Wydarzenie</label>
+      <select id="eventSel" class="select" v-model="selectedEventId" @change="loadChat">
+        <option disabled value="">— wybierz wydarzenie —</option>
+        <option v-for="e in eventOptions" :key="e.id" :value="e.id">
+          {{ e.name }}
+        </option>
+      </select>
+
+      <!-- DEMO: przełącznik "piszę jako" żeby pokazać obie strony w jednym UI -->
+      <label class="aswho">
+        Piszę jako:
+        <select class="select aswho__sel" v-model="writeAs">
+          <option value="ME">Ja ({{ meName }})</option>
+          <option value="ORGANIZER">Organizator (demo)</option>
+        </select>
+      </label>
+
+      <button class="btn" :disabled="!selectedEventId" @click="seedAutoReply">
+        Symuluj odpowiedź organizatora
+      </button>
+    </div>
+
+    <!-- Wątek -->
+    <section class="card thread" v-if="selectedEventId">
+      <div class="thread__inner" ref="scrollBox">
+        <template v-if="chatDoc.messages?.length">
+          <div
+            v-for="m in chatDoc.messages"
+            :key="m.id"
+            class="msg"
+            :class="{
+              'msg--me': m.sender_id === meId,
+              'msg--org': m.sender_id === organizerId,
+            }"
+          >
+            <div class="msg__meta">
+              <span class="who">{{ senderDisplay(m.sender_id) }}</span>
+              <span class="ts">{{ fmtTime(m.ts) }}</span>
+            </div>
+            <div class="msg__bubble">{{ m.text }}</div>
+          </div>
+        </template>
+        <p v-else class="muted">Brak wiadomości w tym wątku. Napisz pierwszą!</p>
+      </div>
+
+      <!-- Wysyłanie -->
+      <form class="composer" @submit.prevent="send">
+        <input
+          class="input composer__input"
+          v-model="draft"
+          placeholder="Napisz wiadomość…"
+          :disabled="sending"
+        />
+        <button class="btn btn--primary" :disabled="sending || !draft.trim()">Wyślij</button>
+      </form>
+      <small v-if="error" class="err">{{ error }}</small>
+    </section>
+  </div>
+</template>
+
+<script setup>
+import { onMounted, ref, computed, watch, nextTick } from 'vue'
+import { useAuthStore } from '@/stores/auth.js'
+import { listEventsForUser } from '@/api/user.js'
+import { getChat, sendChatMessage } from '@/api/chat.js'
+import { mockEventsForUser } from '@/mocks/events.js'
+import { getChatMock, postMessageMock, autoReplyMock } from '@/mocks/chat.js'
+
+const auth = useAuthStore()
+const meId = computed(() => auth.user?.id || 'u-1')
+const meName = computed(() => auth.user?.name || 'Ja')
+
+// 1) Wybór eventu
+const eventOptions = ref([])
+const selectedEventId = ref('')
+const writeAs = ref('ME') // 'ME' | 'ORGANIZER' (demo)
+
+onMounted(async () => {
+  try {
+    const resp = await listEventsForUser(meId.value)
+    const events = Array.isArray(resp) ? resp : resp?.events
+    if (!events) throw new Error('no events')
+    eventOptions.value = events
+    selectedEventId.value = events[0]?.id || ''
+  } catch {
+    // mock fallback
+    eventOptions.value = mockEventsForUser()
+    selectedEventId.value = eventOptions.value[0]?.id || ''
+  }
+  if (selectedEventId.value) await loadChat()
+})
+
+watch(selectedEventId, async () => {
+  if (selectedEventId.value) await loadChat()
+})
+
+const chatDoc = ref({
+  chat_id: '',
+  event_id: '',
+  participants: [],
+  last_seen: {},
+  messages: [],
+})
+
+const participantsById = computed(() => {
+  const map = {}
+  for (const p of chatDoc.value.participants || []) map[p.user_id] = p
+  return map
+})
+const organizerId = computed(() => {
+  return (chatDoc.value.participants || []).find((p) => p.role === 'ORGANIZER')?.user_id
+})
+
+const sending = ref(false)
+const error = ref('')
+const scrollBox = ref(null)
+const draft = ref('')
+
+async function loadChat() {
+  error.value = ''
+  try {
+    // real API: zwraca cały dokument
+    const data = await getChat(selectedEventId.value, meId.value)
+    chatDoc.value = {
+      chat_id: data.chat_id,
+      event_id: data.event_id,
+      participants: data.participants || [],
+      last_seen: data.last_seen || {},
+      messages: (data.messages || []).slice().sort((a, b) => new Date(a.ts) - new Date(b.ts)),
+    }
+  } catch {
+    // mock
+    const m = getChatMock(selectedEventId.value, meId.value)
+    chatDoc.value = {
+      chat_id: m.chat_id,
+      event_id: m.event_id,
+      participants: m.participants || [],
+      last_seen: m.last_seen || {},
+      messages: (m.messages || []).slice().sort((a, b) => new Date(a.ts) - new Date(b.ts)),
+    }
+  }
+  await nextTick()
+  scrollToBottom()
+}
+
+function scrollToBottom() {
+  const el = scrollBox.value
+  if (!el) return
+  el.scrollTop = el.scrollHeight
+}
+
+function fmtTime(ts) {
+  const d = new Date(ts)
+  return d.toLocaleString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+  })
+}
+
+function senderDisplay(uid) {
+  if (uid === meId.value) return 'Ty'
+  return participantsById.value[uid]?.display_name || uid
+}
+
+async function send() {
+  if (!draft.value.trim() || !selectedEventId.value) return
+  sending.value = true
+  error.value = ''
+  const text = draft.value
+  draft.value = ''
+
+  const optimistic = {
+    id: `tmp-${Date.now()}`,
+    ts: new Date().toISOString(),
+    sender_id: writeAs.value === 'ORGANIZER' ? organizerId.value || 'org-demo' : meId.value,
+    text,
+    meta: { delivered: true },
+  }
+  chatDoc.value.messages.push(optimistic)
+  await nextTick()
+  scrollToBottom()
+
+  try {
+    // real API: wysyłamy jako "ja" (backend weźmie nadawcę z tokena)
+    await sendChatMessage(selectedEventId.value, meId.value, { text })
+  } catch {
+    // fallback mock (tu można 'udawać' obie strony dla dema)
+    const saved = postMessageMock({
+      eventId: selectedEventId.value,
+      userId: meId.value,
+      text,
+      as: writeAs.value,
+    })
+    const i = chatDoc.value.messages.findIndex((m) => m.id === optimistic.id)
+    if (i !== -1) chatDoc.value.messages[i] = saved
+  } finally {
+    sending.value = false
+    await nextTick()
+    scrollToBottom()
+  }
+}
+
+// DEMO: szybka odpowiedź organizatora
+async function seedAutoReply() {
+  autoReplyMock({ eventId: selectedEventId.value, userId: meId.value })
+  await loadChat()
+}
+</script>
+
+<style scoped lang="scss">
+.head {
+  margin-bottom: 0.75rem;
+  .muted {
+    color: $muted-color;
+  }
+}
+
+.picker {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.5rem;
+  align-items: center;
+
+  @media (max-width: 840px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lbl {
+  font-weight: 600;
+}
+
+.aswho {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  .aswho__sel {
+    min-width: 180px;
+  }
+}
+
+.thread {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  gap: 0.5rem;
+  min-height: 50vh;
+}
+
+.thread__inner {
+  max-height: 60vh;
+  overflow-y: auto;
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  padding: 0.75rem;
+  background: $surface;
+}
+
+.msg {
+  margin: 0.4rem 0;
+  max-width: 80%;
+}
+.msg--me {
+  margin-left: auto;
+}
+.msg--org {
+  margin-right: auto;
+}
+
+.msg__meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  font-size: 0.8rem;
+  color: $muted-color;
+  margin: 0 0 0.15rem 0;
+}
+
+.msg__bubble {
+  padding: 0.55rem 0.7rem;
+  border-radius: $radius-md;
+  border: 1px solid $border-color;
+  background: $surface-hover;
+}
+.msg--me .msg__bubble {
+  background: rgba($blue-color, 0.08);
+  border-color: rgba($blue-color, 0.35);
+}
+.msg--org .msg__bubble {
+  background: #fff;
+}
+
+.composer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+.composer__input {
+  width: 100%;
+}
+
+.err {
+  color: $red-color;
+}
+</style>
+
+
+==== ./src\components\dashboard\Categories\OrgAdvertPublication.vue ====
+<template>
+    Tutaj organizator dodaje i edytuje ogłoszenia.</br>
+    Klika dodaj lub wybiera ogłoszenie do edycji.</br>
+    Wtedy po prostu uzupełnia pola i zapisuje.</br>
+    Do tego, tworzy drzewo podeventów, przypisuje</br>
+    im adminów itp
+</template>
+
+
+==== ./src\components\dashboard\Categories\OrgAlertSettings.vue ====
+<template>
+    Tutaj organizator zarządza alertami.</br>
+    damy mu kilka rodzajów alertów
+</template>
+
+
+==== ./src\components\dashboard\Categories\OrgApplicationManagement.vue ====
+<template>
+    Tutaj organizator zobaczy wolontariuszy,</br>
+    którzy się zgłosili (select eventu). Tutaj może ich usunąć</br>
+    lub przypisać im zadanie.</br>
+    Może też kliknąć na nim, żeby przeczytać opinie.
+</template>
+
+
+==== ./src\components\dashboard\Categories\OrgOpinions.vue ====
+<template>
+    Tutaj organizator zarządza opiniami dla wolontariuszy</br>
+    na wszystkich zakończonych wydarzeniach.
+</template>
+
+
+==== ./src\components\dashboard\Categories\SudoEventVerification.vue ====
+<template>
+    Tutaj admin zatwierdza wydarzenia</br>
+</template>
+
+
+==== ./src\components\dashboard\Categories\SudoOrgVerification.vue ====
+<template>
+    Kiedy ktoś chce założyć organizację, admin ją zatwierdza.</br>
+</template>
+
+
+==== ./src\components\dashboard\Categories\VolNotifSettings.vue ====
+<template>
+    Tutaj wolontariusz decyduje, jakie powiadomienia chce otrzymywać.</br>
+</template>
+
+
+==== ./src\components\structure\Footer.vue ====
+<template>
+  <footer class="footer">
+    <div class="footer__inner">
+      <!-- Brand -->
+      <router-link to="/" class="brand" aria-label="Przejdź do strony głównej">
+        <img class="brand__logo" src="@/assets/logo.png" alt="" />
+        <span class="brand__name">Wolontariat</span>
+      </router-link>
+
+      <!-- Nawigacja skrótowa -->
+      <nav class="links" aria-label="Szybkie linki">
+        <router-link to="/">Ogłoszenia</router-link>
+        <router-link to="/dashboard">Panel</router-link>
+        <router-link to="/login">Logowanie</router-link>
+      </nav>
+
+      <!-- Kontakt / info -->
+      <div class="meta">
+        <p class="meta__line">
+          Masz pytania? <a href="mailto:kontakt@wolontariat.pl">kontakt@wolontariat.pl</a>
+        </p>
+        <p class="meta__line">© {{ year }} Wolontariat — wszystkie prawa zastrzeżone</p>
+      </div>
+    </div>
+  </footer>
+</template>
+
+<script setup>
+const year = new Date().getFullYear()
+</script>
+
+<style scoped lang="scss">
+.footer {
+  margin-top: 2rem;
+  background: $surface;
+  border-top: 1px solid $border-color;
+  color: $font-color;
+}
+
+.footer__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem;
+
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: inherit;
+
+  &__logo {
+    height: 36px;
+    width: auto;
+    display: block;
+  }
+  &__name {
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+}
+
+.links {
+  display: inline-flex;
+  gap: 0.75rem;
+
+  a {
+    padding: 0.3rem 0.55rem;
+    border-radius: $radius-sm;
+    transition:
+      background-color 120ms ease,
+      color 120ms ease;
+    color: $muted-color;
+
+    &:hover {
+      color: $blue-color;
+      background: $surface-hover;
+    }
+    &.router-link-exact-active {
+      color: $blue-color;
+      font-weight: 600;
+    }
+  }
+
+  @media (max-width: 900px) {
+    justify-content: center;
+  }
+}
+
+.meta {
+  text-align: right;
+
+  .meta__line {
+    margin: 0.1rem 0;
+    color: $muted-color;
+    font-size: 0.9rem;
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+
+      &:hover {
+        color: $red-color;
+      }
+    }
+  }
+
+  @media (max-width: 900px) {
+    text-align: center;
+  }
+}
+</style>
+
+
+==== ./src\components\structure\Navbar.vue ====
+<template>
+  <header class="navbar">
+    <div class="navbar__inner">
+      <router-link to="/" class="brand">
+        <img class="brand__logo" src="@/assets/logo.png" alt="Logo" />
+        <span class="brand__name">Wolontariat</span>
+      </router-link>
+
+      <nav class="nav">
+        <router-link to="/">Ogłoszenia</router-link>
+        <router-link to="/login">Logowanie</router-link>
+        <router-link to="/dashboard">Panel</router-link>
+      </nav>
+
+      <div class="role" v-if="auth.rolesAvailable.length">
+        <label v-if="auth.rolesAvailable.length > 1" class="role__switch">
+          Rola:
+          <select :value="auth.currentRole" @change="onChange" class="select">
+            <option v-for="r in auth.rolesAvailable" :key="r" :value="r">
+              {{ auth.ROLE_LABEL[r] || r }}
+            </option>
+          </select>
+        </label>
+        <span v-else class="badge">
+          {{ auth.ROLE_LABEL[auth.currentRole] || auth.currentRole }}
+        </span>
+      </div>
+    </div>
+  </header>
+</template>
+
+<script setup>
+import { useAuthStore } from '@/stores/auth.js'
+const auth = useAuthStore()
+function onChange(e) {
+  auth.setRole(e.target.value)
+}
+</script>
+
+<style scoped lang="scss">
+.navbar {
+  position: relative;
+  top: 0;
+  z-index: 50;
+  background: $surface;
+  border-bottom: 1px solid $border-color;
+}
+
+.navbar__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: $font-color;
+
+  &__logo {
+    height: 36px;
+    width: auto;
+    display: block;
+  }
+  &__name {
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+}
+
+.nav {
+  display: inline-flex;
+  gap: 0.25rem;
+
+  a {
+    padding: 0.45rem 0.7rem;
+    border-radius: 8px;
+    transition:
+      background-color 120ms ease,
+      color 120ms ease;
+    color: $font-color;
+
+    &:hover {
+      background: $surface-hover;
+    }
+    &.router-link-exact-active {
+      color: $blue-color;
+      background: $surface-hover;
+      font-weight: 600;
+    }
+  }
+}
+
+.role {
+  display: inline-flex;
+  align-items: center;
+}
+.role__switch {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.select {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  background: $surface;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  background: $surface-hover;
+  border: 1px solid $border-color;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+</style>
+
+
+==== ./src\mocks\certificates.js ====
+// Uproszczone mocki pod certyfikaty.
+// Zakładamy, że certyfikat można wygenerować dla zakończonych eventów,
+// w których dany user brał udział (jest na przynajmniej 1 tasku).
+
+const now = new Date()
+const day = 24 * 60 * 60 * 1000
+const iso = (d) => new Date(d).toISOString()
+
+export const mockUsers = [
+  { id: 'u-1', name: 'Test User' }, // nasz zalogowany
+  { id: 'u-2', name: 'Wolontariusz Kowalski' },
+  { id: 'u-3', name: 'Wolontariusz Anna' },
+  { id: 'u-4', name: 'Wolontariusz Bartek' },
+  { id: 'u-8', name: 'Wolontariusz Ola' },
+]
+
+export const mockEvents = [
+  {
+    id: 'evt-100',
+    name: 'Porządkowanie Parku',
+    description: 'Akcja sprzątania po weekendzie.',
+    status: 'FINISHED',
+    institution_id: 'inst-3',
+    start_date: iso(now.getTime() - 7 * day),
+    end_date: iso(now.getTime() - 7 * day + 3 * 60 * 60 * 1000),
+    groups: [
+      {
+        id: 'grp-a',
+        name: 'Strefa wschodnia',
+        tasks: [
+          {
+            id: 'tsk-a1',
+            name: 'Zbieranie odpadów',
+            start_date: iso(now.getTime() - 7 * day),
+            end_date: iso(now.getTime() - 7 * day + 3 * 60 * 60 * 1000),
+            users: [{ id: 'u-1' }, { id: 'u-8' }],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'evt-101',
+    name: 'Zbiórka Żywności',
+    description: 'Akcja w kilku sklepach.',
+    status: 'FINISHED',
+    institution_id: 'inst-2',
+    start_date: iso(now.getTime() - 3 * day),
+    end_date: iso(now.getTime() - 3 * day + 6 * 60 * 60 * 1000),
+    groups: [
+      {
+        id: 'grp-b',
+        name: 'Sklep A',
+        tasks: [
+          {
+            id: 'tsk-b1',
+            name: 'Zmiana poranna',
+            start_date: iso(now.getTime() - 3 * day),
+            end_date: iso(now.getTime() - 3 * day + 3 * 60 * 60 * 1000),
+            users: [{ id: 'u-3' }],
+          },
+          {
+            id: 'tsk-b2',
+            name: 'Zmiana popołudniowa',
+            start_date: iso(now.getTime() - 3 * day + 3 * 60 * 60 * 1000),
+            end_date: iso(now.getTime() - 3 * day + 6 * 60 * 60 * 1000),
+            users: [{ id: 'u-4' }],
+          },
+        ],
+      },
+    ],
+  },
+  // Do podglądu – event bieżący (nie generujemy z niego certyfikatów)
+  {
+    id: 'evt-102',
+    name: 'Bieg Charytatywny',
+    description: 'Park Jordana.',
+    status: 'CONFIRMED',
+    institution_id: 'inst-1',
+    start_date: iso(now.getTime() + 2 * day),
+    end_date: iso(now.getTime() + 2 * day + 4 * 60 * 60 * 1000),
+    groups: [
+      {
+        id: 'grp-c',
+        name: 'Strefa Startu',
+        tasks: [
+          {
+            id: 'tsk-c1',
+            name: 'Rejestracja',
+            start_date: iso(now.getTime() + 2 * day),
+            end_date: iso(now.getTime() + 2 * day + 2 * 60 * 60 * 1000),
+            users: [{ id: 'u-1' }, { id: 'u-3' }],
+          },
+        ],
+      },
+    ],
+  },
+]
+
+// Zwraca listę eventów FINISHED, w których brał udział userId
+export function mockEligibleEventsForUser(userId) {
+  const finished = mockEvents.filter((e) => new Date(e.end_date).getTime() < Date.now())
+  return finished.filter((e) =>
+    (e.groups || []).some((g) =>
+      (g.tasks || []).some((t) => (t.users || []).some((u) => u.id === userId)),
+    ),
+  )
+}
+
+// Koordynator – przykładowo ma „pod sobą” u-3 i u-4
+export function mockCoordinatorVolunteers(coordinatorId) {
+  // coordinatorId nieużywany w mocku – zawsze ci sami
+  return mockUsers.filter((u) => ['u-3', 'u-4'].includes(u.id))
+}
+
+// Organizator – zwracamy wolontariuszy, którzy uczestniczyli w jego eventach (tu: inst-2)
+export function mockOrganizerVolunteers(organizerId) {
+  // organizerId nieużywany w mocku – uproszczenie
+  const involvedIds = new Set()
+  mockEvents
+    .filter((e) => e.institution_id === 'inst-2' || e.institution_id === 'inst-3')
+    .forEach((e) =>
+      e.groups.forEach((g) =>
+        g.tasks.forEach((t) => t.users.forEach((u) => involvedIds.add(u.id))),
+      ),
+    )
+  return mockUsers.filter((u) => involvedIds.has(u.id))
+}
+
+// Admin – wszyscy
+export function mockAllVolunteers() {
+  return mockUsers
+}
+
+// Fallback: „generujemy” pseudo-PDF (właściwie zwykły blob z tekstem)
+export function mockCertificateBlob({ event, user }) {
+  const text = `
+CERTYFIKAT UCZESTNICTWA
+Uczestnik: ${user?.name || user?.id}
+Wydarzenie: ${event?.name} (${event?.id})
+Data: ${new Date().toLocaleString()}
+
+To jest przykładowy mock certyfikatu (PDF placeholder).
+`
+  return new Blob([text], { type: 'application/pdf' })
+}
+
+
+==== ./src\mocks\chat.js ====
+// frontend/src/mocks/chat.js
+// Mock zgodny ze schematem:
+// { chat_id, event_id, participants[{user_id, role, display_name}], last_seen{...}, messages[{id,ts,sender_id,text,meta}] }
+
+const LS_KEY = 'mock_chats_v2'
+
+// Seed: przykładowe dwa wątki
+const seed = {
+  'evt-krk-002:u-1': {
+    chat_id: 'evt-krk-002:u-1',
+    event_id: 'evt-krk-002',
+    participants: [
+      { user_id: 'u-1', role: 'VOLUNTEER', display_name: 'Test User' },
+      { user_id: 'org-1', role: 'ORGANIZER', display_name: 'Organizator Kasia' },
+    ],
+    last_seen: { 'u-1': null, 'org-1': null },
+    messages: [
+      {
+        id: 'm-1',
+        ts: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
+        sender_id: 'u-1',
+        text: 'Cześć! Gdzie jutro odbieramy identyfikatory?',
+        meta: { delivered: true, read_at: null },
+      },
+      {
+        id: 'm-2',
+        ts: new Date(Date.now() - 1000 * 60 * 60 * 5 + 42000).toISOString(),
+        sender_id: 'org-1',
+        text: 'Hej, w namiocie przy wejściu A, od 8:30.',
+        meta: { delivered: true },
+      },
+      {
+        id: 'm-3',
+        ts: new Date(Date.now() - 1000 * 60 * 60 * 4 + 120000).toISOString(),
+        sender_id: 'u-1',
+        text: 'Dzięki!',
+        meta: { delivered: true },
+      },
+    ],
+  },
+  'evt-krk-001:u-1': {
+    chat_id: 'evt-krk-001:u-1',
+    event_id: 'evt-krk-001',
+    participants: [
+      { user_id: 'u-1', role: 'VOLUNTEER', display_name: 'Test User' },
+      { user_id: 'org-9', role: 'ORGANIZER', display_name: 'Organizator Marek' },
+    ],
+    last_seen: { 'u-1': null, 'org-9': null },
+    messages: [
+      {
+        id: 'm-1',
+        ts: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+        sender_id: 'org-9',
+        text: 'Przypominam o kamizelkach odblaskowych :)',
+        meta: { delivered: true },
+      },
+    ],
+  },
+}
+
+// --- helpers ---
+function load() {
+  try {
+    const raw = localStorage.getItem(LS_KEY)
+    return raw ? JSON.parse(raw) : { ...seed }
+  } catch {
+    return { ...seed }
+  }
+}
+function save(db) {
+  localStorage.setItem(LS_KEY, JSON.stringify(db))
+}
+function keyOf(eventId, userId) {
+  return `${eventId}:${userId}`
+}
+function nextMsgId(chat) {
+  const last = chat.messages[chat.messages.length - 1]
+  const n = last ? parseInt((last.id || 'm-0').split('-')[1], 10) + 1 : 1
+  return `m-${n}`
+}
+function ensureChat(db, eventId, userId) {
+  const key = keyOf(eventId, userId)
+  if (!db[key]) {
+    db[key] = {
+      chat_id: key,
+      event_id: eventId,
+      participants: [
+        { user_id: userId, role: 'VOLUNTEER', display_name: 'Ty' },
+        { user_id: `org-${eventId}`, role: 'ORGANIZER', display_name: 'Organizator' },
+      ],
+      last_seen: { [userId]: null, [`org-${eventId}`]: null },
+      messages: [],
+    }
+  }
+  return db[key]
+}
+function organizerId(chat) {
+  return chat.participants.find((p) => p.role === 'ORGANIZER')?.user_id
+}
+
+// --- API MOCK ---
+export function getChatMock(eventId, userId) {
+  const db = load()
+  const chat = ensureChat(db, eventId, userId)
+  save(db)
+  // deep copy
+  return JSON.parse(JSON.stringify(chat))
+}
+
+export function postMessageMock({ eventId, userId, text, as = 'ME' }) {
+  // as: 'ME' | 'ORGANIZER' (tylko na potrzeby dema)
+  const db = load()
+  const key = keyOf(eventId, userId)
+  const chat = ensureChat(db, eventId, userId)
+
+  const sender_id = as === 'ORGANIZER' ? organizerId(chat) : userId
+  const msg = {
+    id: nextMsgId(chat),
+    ts: new Date().toISOString(),
+    sender_id,
+    text: text || '',
+    meta: { delivered: true },
+  }
+  chat.messages.push(msg)
+  db[key] = chat
+  save(db)
+  return JSON.parse(JSON.stringify(msg))
+}
+
+// Symulacja auto-odpowiedzi organizatora
+export function autoReplyMock({ eventId, userId }) {
+  const variants = [
+    'Dziękuję za wiadomość, sprawdzę i dam znać.',
+    'Ok, zanotowane.',
+    'Możemy to potwierdzić jutro rano.',
+    'Brzmi dobrze!',
+    'Poproszę o numer telefonu do kontaktu w dniu wydarzenia.',
+  ]
+  const text = variants[Math.floor(Math.random() * variants.length)]
+  return postMessageMock({ eventId, userId, text, as: 'ORGANIZER' })
+}
+
+
+==== ./src\mocks\events.js ====
+// Prosty mock danych kalendarza, zgodny z naszymi typami
+export function mockEventsForUser() {
+  // daty w ISO, kilka eventów przeszłych i przyszłych
+  const now = new Date()
+  const day = 24 * 60 * 60 * 1000
+
+  const iso = (d) => new Date(d).toISOString()
+
+  return [
+    {
+      id: 'evt-krk-001',
+      name: 'Bieg Charytatywny',
+      description: 'Wydarzenie biegowe w Parku Jordana.',
+      status: 'CONFIRMED',
+      institution_id: 'inst-1',
+      start_date: iso(now.getTime() + 3 * day),
+      end_date: iso(now.getTime() + 3 * day + 3 * 60 * 60 * 1000),
+      groups: [
+        {
+          id: 'grp-1',
+          name: 'Strefa Startu',
+          tasks: [
+            {
+              id: 'tsk-1',
+              name: 'Rejestracja uczestników',
+              start_date: iso(now.getTime() + 3 * day),
+              end_date: iso(now.getTime() + 3 * day + 2 * 60 * 60 * 1000),
+              users: [{ id: 'u-2' }, { id: 'u-3' }],
+            },
+            {
+              id: 'tsk-2',
+              name: 'Wydawanie numerów',
+              start_date: iso(now.getTime() + 3 * day),
+              end_date: iso(now.getTime() + 3 * day + 2 * 60 * 60 * 1000),
+              users: [{ id: 'u-4' }],
+            },
+          ],
+        },
+        {
+          id: 'grp-2',
+          name: 'Trasa',
+          tasks: [
+            {
+              id: 'tsk-3',
+              name: 'Nawadnianie 5km',
+              start_date: iso(now.getTime() + 3 * day + 60 * 60 * 1000),
+              end_date: iso(now.getTime() + 3 * day + 3 * 60 * 60 * 1000),
+              users: [{ id: 'u-5' }, { id: 'u-6' }],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'evt-krk-002',
+      name: 'Zbiórka Żywności',
+      description: 'Akcja w kilku sklepach na terenie miasta.',
+      status: 'CONFIRMED',
+      institution_id: 'inst-2',
+      start_date: iso(now.getTime() + 7 * day),
+      end_date: iso(now.getTime() + 7 * day + 8 * 60 * 60 * 1000),
+      groups: [
+        {
+          id: 'grp-3',
+          name: 'Sklep A',
+          tasks: [
+            {
+              id: 'tsk-4',
+              name: 'Zmiana poranna',
+              start_date: iso(now.getTime() + 7 * day),
+              end_date: iso(now.getTime() + 7 * day + 4 * 60 * 60 * 1000),
+              users: [{ id: 'u-1' }], // nasz test user
+            },
+            {
+              id: 'tsk-5',
+              name: 'Zmiana popołudniowa',
+              start_date: iso(now.getTime() + 7 * day + 4 * 60 * 60 * 1000),
+              end_date: iso(now.getTime() + 7 * day + 8 * 60 * 60 * 1000),
+              users: [{ id: 'u-7' }],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'evt-krk-000',
+      name: 'Porządkowanie Parku',
+      description: 'Akcja sprzątania po weekendzie.',
+      status: 'FINISHED',
+      institution_id: 'inst-3',
+      start_date: iso(now.getTime() - 5 * day),
+      end_date: iso(now.getTime() - 5 * day + 3 * 60 * 60 * 1000),
+      groups: [
+        {
+          id: 'grp-4',
+          name: 'Strefa wschodnia',
+          tasks: [
+            {
+              id: 'tsk-6',
+              name: 'Zbieranie odpadów',
+              start_date: iso(now.getTime() - 5 * day),
+              end_date: iso(now.getTime() - 5 * day + 3 * 60 * 60 * 1000),
+              users: [{ id: 'u-1' }, { id: 'u-8' }],
+            },
+          ],
+        },
+      ],
+    },
+  ]
+}
+
+
+==== ./src\mocks\groups.js ====
+import { mockEventsForUser } from './events.js'
+
+// Zwraca spłaszczoną listę grup (z eventami) widocznych dla koordynatora.
+// W mocku używamy tych samych eventów, co w kalendarzu.
+export function mockGroupsForCoordinator(coordinatorId = 'u-1') {
+  // Używamy listy eventów z mocka; w realu – zapytanie do backendu.
+  const events = mockEventsForUser()
+  const list = []
+  for (const ev of events) {
+    for (const g of ev.groups || []) {
+      list.push({
+        eventId: ev.id,
+        eventName: ev.name,
+        groupId: g.id,
+        groupName: g.name,
+      })
+    }
+  }
+  return list
+}
+
+
+==== ./src\router\index.js ====
+import { createRouter, createWebHistory } from 'vue-router'
+import LoginPage from '../views/LoginPage.vue'
+import BrowserPage from '../views/BrowserPage.vue'
+import DashboardPage from '../views/DashboardPage.vue'
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/',
+      name: 'browser',
+      component: BrowserPage,
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginPage,
+    },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: DashboardPage,
+      // meta: { requiresAuth: true },
+      redirect: '/dashboard/panel',
+      children: [
+        {
+          path: 'panel',
+          name: 'dashboard-panel',
+          component: () => import('../components/dashboard/Categories/AllDashboard.vue'),
+        },
+        {
+          path: 'user',
+          name: 'dashboard-user',
+          component: () => import('../components/dashboard/Categories/AllUserData.vue'),
+        },
+        {
+          path: 'calendar',
+          name: 'dashboard-calendar',
+          component: () => import('../components/dashboard/Categories/AllCalendar.vue'),
+        },
+        {
+          path: 'certificates',
+          name: 'dashboard-certificates',
+          component: () => import('../components/dashboard/Categories/AllCertificates.vue'),
+        },
+        {
+          path: 'reports',
+          name: 'dashboard-reports',
+          component: () => import('../components/dashboard/Categories/AllReports.vue'),
+        },
+        {
+          path: 'contact',
+          name: 'dashboard-contact',
+          component: () => import('../components/dashboard/Categories/CoordContact.vue'),
+        },
+        {
+          path: 'advert-publication',
+          name: 'dashboard-advert-publication',
+          component: () => import('../components/dashboard/Categories/OrgAdvertPublication.vue'),
+        },
+        {
+          path: 'alert-settings',
+          name: 'dashboard-alert-settings',
+          component: () => import('../components/dashboard/Categories/OrgAlertSettings.vue'),
+        },
+        {
+          path: 'application-management',
+          name: 'dashboard-application-management',
+          component: () =>
+            import('../components/dashboard/Categories/OrgApplicationManagement.vue'),
+        },
+        {
+          path: 'opinions',
+          name: 'dashboard-opinions',
+          component: () => import('../components/dashboard/Categories/OrgOpinions.vue'),
+        },
+        {
+          path: 'institution-verification',
+          name: 'dashboard-institution-verification',
+          component: () => import('../components/dashboard/Categories/SudoOrgVerification.vue'),
+        },
+        {
+          path: 'event-verification',
+          name: 'dashboard-event-verification',
+          component: () => import('../components/dashboard/Categories/SudoEventVerification.vue'),
+        },
+        {
+          path: 'notification-settings',
+          name: 'dashboard-notification-settings',
+          component: () => import('../components/dashboard/Categories/VolNotifSettings.vue'),
+        },
+      ],
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('@/views/NotFound.vue'),
+    },
+  ],
+})
+
+router.beforeEach((to) => {
+  const token = localStorage.getItem('token')
+  if (to.meta.requiresAuth && !token) {
+    //return { name: 'login' }
+    console.log('No token found.')
+  }
+})
+
+export default router
+
+
+==== ./src\stores\auth.js ====
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+
+export const ROLE = {
+  VOLUNTEER: 'VOLUNTEER',
+  COORDINATOR: 'COORDINATOR',
+  ORG_ADMIN: 'ORG_ADMIN',
+  GOV_ADMIN: 'GOV_ADMIN',
+}
+
+export const ROLE_LABEL = {
+  [ROLE.VOLUNTEER]: 'Wolontariusz',
+  [ROLE.COORDINATOR]: 'Koordynator',
+  [ROLE.ORG_ADMIN]: 'Admin organizacji',
+  [ROLE.GOV_ADMIN]: 'Admin rządowy',
+}
+
+export const useAuthStore = defineStore('auth', () => {
+  const user = ref(null)
+  const rolesAvailable = ref([])
+  const currentRole = ref(null)
+
+  function setAuthFromBackend({ user: u, roles }) {
+    user.value = u || null
+    const r = Array.isArray(roles) ? roles : roles ? [roles] : []
+    rolesAvailable.value = r
+    currentRole.value = r[0] || null
+  }
+
+  function setRole(role) {
+    if (rolesAvailable.value.includes(role)) currentRole.value = role
+  }
+
+  const isGovAdmin = computed(() => currentRole.value === ROLE.GOV_ADMIN)
+  const isOrgAdmin = computed(() => currentRole.value === ROLE.ORG_ADMIN)
+  const isCoordinator = computed(() => currentRole.value === ROLE.COORDINATOR)
+  const isVolunteer = computed(() => currentRole.value === ROLE.VOLUNTEER)
+
+  return {
+    // state
+    user,
+    rolesAvailable,
+    currentRole,
+    // labels/enums
+    ROLE,
+    ROLE_LABEL,
+    // actions
+    setAuthFromBackend,
+    setRole,
+    // getters
+    isGovAdmin,
+    isOrgAdmin,
+    isCoordinator,
+    isVolunteer,
+  }
+})
+
+
+==== ./src\views\BrowserPage.vue ====
+<template>Browser Page</template>
+
+<script setup></script>
+
+<style></style>
+
+
+==== ./src\views\DashboardPage.vue ====
+<template>
+  <div class="dashboard">
+    <div class="settings-bar"><SettingsBar /></div>
+    <div class="dashboard-field card"><RouterView /></div>
+  </div>
+</template>
+
+<script setup>
+import SettingsBar from '@/components/dashboard/SettingsBar.vue'
+</script>
+
+<style scoped lang="scss">
+.dashboard {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1rem;
+  padding: 1rem;
+
+  .dashboard-field {
+    min-height: 60vh;
+  }
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+
+==== ./src\views\LoginPage.vue ====
+<template>
+  <div class="login">
+    <h2>Testowy login</h2>
+    <p>Po kliknięciu poniżej dostaniesz wszystkie 4 role do wyboru w nawigacji.</p>
+
+    <button class="btn btn--primary" @click="loginTest" :disabled="loading">
+      {{ loading ? 'Logowanie…' : 'Zaloguj testowo' }}
+    </button>
+
+    <div v-if="preview.length" class="preview">
+      <strong>Załadowane role:</strong>
+      <ul>
+        <li v-for="r in preview" :key="r">{{ auth.ROLE_LABEL[r] || r }}</li>
+      </ul>
+      <small>Teraz możesz przełączyć rolę w prawym górnym rogu (Navbar).</small>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore, ROLE } from '@/stores/auth.js'
+
+const router = useRouter()
+const auth = useAuthStore()
+const loading = ref(false)
+const preview = ref([])
+
+async function loginTest() {
+  loading.value = true
+  try {
+    const fakeResponse = {
+      user: { id: 'u-1', name: 'Test User' },
+      roles: [ROLE.VOLUNTEER, ROLE.COORDINATOR, ROLE.ORG_ADMIN, ROLE.GOV_ADMIN],
+    }
+
+    auth.setAuthFromBackend(fakeResponse)
+    preview.value = fakeResponse.roles
+    localStorage.setItem('token', 'fake-token')
+
+    router.push({ name: 'dashboard' })
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
+<style scoped lang="scss">
+.login {
+  max-width: 520px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: $surface;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+
+  h2 {
+    margin: 0 0 0.25rem 0;
+  }
+  p {
+    color: $muted-color;
+    margin: 0 0 1rem 0;
+  }
+}
+
+.btn {
+  margin-top: 0.25rem;
+}
+
+.preview {
+  margin-top: 1rem;
+
+  ul {
+    margin: 0.25rem 0 0 1rem;
+    color: $muted-color;
+  }
+}
+</style>
+
+
+==== ./src\views\MainView.vue ====
+<template>
+  <div class="container">
+    <Navbar />
+    <div class="content">
+      <router-view />
+    </div>
+    <Footer />
+  </div>
+</template>
+
+<script setup>
+import Navbar from '@/components/structure/Navbar.vue'
+import Footer from '@/components/structure/Footer.vue'
+</script>
+
+<style scoped>
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+}
+.content {
+  min-height: calc(100vh - 100px);
+}
+</style>
+
+
+==== ./src\views\NotFound.vue ====
+<template>
+  <div class="nf">
+    <div class="panel">
+      <img class="logo" src="@/assets/logo.png" alt="Logo" />
+      <h1>Ups, nie ma takiej strony</h1>
+      <p class="hint">
+        Kod błędu: <strong>404</strong>. Link mógł być nieaktualny albo wkradła się literówka.
+      </p>
+
+      <div class="actions">
+        <button class="btn" @click="goBack">Wróć</button>
+        <router-link class="btn" to="/">Strona główna</router-link>
+        <router-link class="btn btn--primary" to="/dashboard">Przejdź do panelu</router-link>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { useRouter } from 'vue-router'
+const router = useRouter()
+function goBack() {
+  if (window.history.length > 1) router.back()
+  else router.push('/')
+}
+</script>
+
+<style scoped lang="scss">
+.nf {
+  min-height: calc(100vh - 120px); // minus navbar+footer
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+}
+
+.panel {
+  width: 100%;
+  max-width: 720px;
+  background: $surface;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 64px;
+  width: auto;
+  margin-bottom: 0.75rem;
+  display: inline-block;
+}
+
+h1 {
+  margin: 0.25rem 0 0.25rem 0;
+  font-size: 1.6rem;
+  color: $font-color;
+}
+
+.hint {
+  margin: 0 0 1.25rem 0;
+  color: $muted-color;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+/* Lokalne, spójne przyciski (bez @extend) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0.55rem 0.9rem;
+  border-radius: $radius-md;
+  border: 1px solid $border-color;
+  background: $surface;
+  color: $font-color;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover {
+    background: $surface-hover;
+  }
+
+  &.btn--primary {
+    background: $blue-color;
+    border-color: $blue-color;
+    color: #fff;
+
+    &:hover {
+      filter: brightness(0.95);
+    }
+  }
+}
+
+@media (max-width: 520px) {
+  .panel {
+    padding: 1.25rem;
+  }
+  h1 {
+    font-size: 1.35rem;
+  }
+}
+</style>
+
+

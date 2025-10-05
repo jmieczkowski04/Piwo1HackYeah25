@@ -8,7 +8,9 @@
 
     <RouterLink class="item" to="/dashboard/calendar">Kalendarz</RouterLink>
     <RouterLink class="item" to="/dashboard/certificates">Zaświadczenia</RouterLink>
-    <RouterLink class="item" to="/dashboard/reports">Raporty</RouterLink>
+    <RouterLink v-if="auth.isOrgAdmin || auth.isCoordinator" class="item" to="/dashboard/reports"
+      >Raporty</RouterLink
+    >
 
     <div class="divider" role="separator"></div>
 
