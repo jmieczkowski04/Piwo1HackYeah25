@@ -25,10 +25,7 @@ class Institution(models.Model):
 class Group(models.Model):
     institution_id = models.IntegerField()
     group_id = models.AutoField(primary_key=True)
-
-    # sprawdzić czy to ma sens
-    group_loc = models.ForeignKey(UserLocation, on_delete=models.SET_NULL, blank=True, null=True)
-    
+    group_loc = models.JSONField()   
     desc = models.TextField(blank=True, null=True)
     parent_group_id = models.IntegerField(blank=True, null=True)
     name = models.CharField(max_length=255)
@@ -75,9 +72,33 @@ class Opinion(models.Model):
     user_id = models.IntegerField()
     author_id = models.IntegerField()
     desc = models.TextField()
+    count = models.IntegerField()
 
     def __str__(self):
         return f"Opinia o użytkowniku {self.user_id} (autor: {self.author_id}, instytucja: {self.institution_id}, grupa: {self.group_id})"
 
+class Alert(models.Model):
+    alert_id = models.AutoField(primary_key=True)
+    user_id = models.IntegerField()
+    group_id = models.IntegerField()
+    type = models.IntegerField()
+    condition = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"Alert {self.alert_id} (user: {self.user_id}, group: {self.group_id}, type: {self.type})"
+
+class ExternalUser(models.Model):
+    external_user_id = models.AutoField(primary_key=True)
+    pesel = models.CharField(max_length=11, unique=True)
+    name = models.CharField(max_length=255)
+    surname = models.CharField(max_length=255)
+    agreement_file = models.BinaryField(blank=True, null=True)
+    supervisor_id = models.IntegerField()
+    institution_id = models.IntegerField()
+    group_id = models.IntegerField()
+    is_accepted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.name} {self.surname} (PESEL: {self.pesel})"
 
 
