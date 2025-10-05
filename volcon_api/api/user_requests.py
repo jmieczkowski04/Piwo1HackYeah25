@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import json
 
@@ -61,7 +62,23 @@ def get_user_data(request, id):
     user_data = get_user_by_id(str(id))
 
     if user_data is None:
-        return JsonResponse({}, status=200)
+        return JsonResponse({"error": "user does not exist"}, status=404)
     
     return JsonResponse(user_data, status=200)
 
+@csrf_exempt
+def get_set_user_coordinates(request, id):
+    if request.method != 'POST' and request.method != 'GET':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
+    user_data = get_user_by_id(str(id))
+
+    if user_data is None:
+        return JsonResponse({"error": "user does not exist"}, status=404)
+    
+    if request.method == 'POST':
+        user_data["coordinates"]["lat"] = request.POST.get('lat')
+        user_data["coordinates"]["lng"] = request.POST.get('lng')
+        return JsonResponse({}, status=200)
+    
+    return JsonResponse({"lat": user_data["coordinates"]["lat"], "lng": user_data["coordinates"]["lng"]}, status=200)
