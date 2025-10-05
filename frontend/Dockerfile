@@ -12,7 +12,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 
-ARG VITE_API_URL=http://gateaway/api
+ARG VITE_API_URL=http://gateaway:8080/api
 RUN VITE_API_URL=$VITE_API_URL pnpm build
 
 FROM nginx:alpine
