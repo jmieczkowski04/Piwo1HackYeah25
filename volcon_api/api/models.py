@@ -72,7 +72,7 @@ class Opinion(models.Model):
     user_id = models.IntegerField()
     author_id = models.IntegerField()
     desc = models.TextField()
-    count = models.IntegerField()
+    rating = models.IntegerField()
 
     def __str__(self):
         return f"Opinia o użytkowniku {self.user_id} (autor: {self.author_id}, instytucja: {self.institution_id}, grupa: {self.group_id})"
@@ -89,7 +89,7 @@ class Alert(models.Model):
 
 class ExternalUser(models.Model):
     external_user_id = models.AutoField(primary_key=True)
-    pesel = models.CharField(max_length=11, unique=True)
+    pesel = models.CharField(max_length=11)
     name = models.CharField(max_length=255)
     surname = models.CharField(max_length=255)
     agreement_file = models.BinaryField(blank=True, null=True)
