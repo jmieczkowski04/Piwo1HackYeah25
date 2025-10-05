@@ -1,0 +1,17 @@
+{
+  "id": "string",
+  "name": "string",
+  "description": "string",
+  "group_id": "string",
+  "start_date": "string",
+  "end_date": "string",
+  "location": {
+    "lat": "number",
+    "lng": "number"
+  },
+  "users": [
+    {
+      "id": "string"
+    }
+  ]
+}

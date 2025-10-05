@@ -1,0 +1,14 @@
+{
+  "id": "string",
+  "name": "string",
+  "description": "string",
+  "status": "string",
+  "institution_id": "string",
+  "groups": [
+    {
+      "id": "string"
+    }
+  ],
+  "start_date": "string",
+  "end_date": "string"
+}

@@ -1,0 +1,84 @@
+User
+    GET /user/:user_id
+    bez niego zwraca dane aktualnego, z nim docelowego
+
+    GET/POST /user/:user_id/localization
+    ustalenie użytkowników
+
+    GET /events/all/users/:user_id
+    wyświetli eventy, które widzi user. Wolontariusz widzi swoje,
+    koordynator widzi swoich wolontariuszy, organizator widzi swoje,
+    admin posiada wszystkie
+
+    Opinions
+      POST /user/:user_id/opinion
+
+      GET/PATCH/DEL /user/:user_id/opinion/:opinion_id
+
+    Notifications
+      POST /user/:user_id/notification
+
+      GET/PATCH/DEL /user/:user_id/notification/:notification_id
+
+TASK
+
+    GET /group/:group_id/user/free
+    użytkownicy nieprzypisani do tasków
+
+    POST /group/:group_id/task
+
+    GET/PATCH/DEL /group/:group_id/task/:task_id
+
+    POST /group/:group_id/task/:task_id/user
+
+    GET/DEL /group/:group_id/task/:task_id/user/:user_id
+    pobieranie i usuwanie usera do taska
+
+Certificates/Chat
+
+    GET /event/:event_id/user/:user_id
+    pobieranie certyfikatu
+
+    GET/POST /event/:event_id/user/:user_id/chat
+    /tutaj endpointy do obsługi czatu koord - org
+
+Event
+    POST /event
+
+    GET/PATCH/DEL /event/:event_id
+
+    GET /event/unconfirmed
+
+    POST /event/:event_id/confirm
+
+Group
+
+    POST /event/:event_id/group
+
+    GET/PATCH/DEL /event/:event_id/group/:group_id
+
+    DELETE/POST/GET /event/:event_id/group/:group_id/user/:user_id
+    usuwa usera z grupy
+    dodaje usera do group
+
+
+Alerts
+    POST /event/:event_id/alert
+
+    GET/PATCH/DEL /event/:event_id/alert/alert_id
+
+Org
+    POST /institution
+    Tworzy organizacje
+
+    GET/PATCH/DEL /institution/:institution_id
+
+    GET /institution/unconfirmed
+    zwraca organizacje czekające na zatwierdzenie
+
+    POST /institution/:institution_id/confirm
+
+    POST/GET/PATCH/DEL /institution/:institution_id/user/:user_id
+
+
+Specjalne user_id = me, czyli bierzemy user id z tokena login gov
