@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard">
     <div class="settings-bar"><SettingsBar /></div>
-    <div class="dashboard-field"><RouterView /></div>
+    <div class="dashboard-field card"><RouterView /></div>
   </div>
 </template>
 
@@ -16,12 +16,12 @@ import SettingsBar from '@/components/dashboard/SettingsBar.vue'
   gap: 1rem;
   padding: 1rem;
 
-  .settings-bar,
   .dashboard-field {
-    background: $surface;
-    border: 1px solid $border-color;
-    border-radius: $radius-lg;
-    padding: 1rem;
+    min-height: 60vh;
+  }
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
   }
 }
 </style>

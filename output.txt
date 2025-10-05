@@ -649,8 +649,8 @@ body {
   margin: 0;
   padding: 0;
   transition:
-    color 0.5s,
-    background-color 0.5s;
+    color 0.2s,
+    background-color 0.2s;
   color: $font-color;
   background: $background-color;
 }
@@ -659,13 +659,41 @@ a:visited {
   color: $font-color;
 }
 
+a {
+  color: inherit;
+  text-decoration: none;
+}
+a:hover {
+  color: $blue-color;
+}
+.card {
+  background: $surface;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+}
+
 
 ==== ./frontend\src\assets\variables.scss ====
-$font-color: #333;
-$background-color: #f9f9f9;
-$background-dark: #ece8e8;
+// BRAND (zostają tylko te dwa)
 $blue-color: #2f83c2;
 $red-color: #cc3960;
+
+// NEUTRALE (możemy dodawać)
+$font-color: #333;
+$muted-color: #666;
+$background-color: #f9f9f9;
+$surface: #ffffff;
+$surface-hover: #f3f4f6; // delikatne podświetlenie
+$border-color: #e5e7eb; // subtelny szary border
+$background-dark: #ece8e8; // zostawiam, jeśli używałeś
+
+// Promienie / cienie (neutralne)
+$radius-sm: 6px;
+$radius-md: 8px;
+$radius-lg: 12px;
+
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
 
 
 ==== ./frontend\src\components\browser\AdvertField.vue ====
@@ -679,61 +707,111 @@ $red-color: #cc3960;
 
 ==== ./frontend\src\components\dashboard\SettingsBar.vue ====
 <template>
-  <div>
-    <ul>
-      <li>
-        <router-link to="/dashboard/panel">Panel główny</router-link>
-      </li>
-      <li v-if="auth.isCoordinator">
-        <router-link to="/dashboard/user">Dane użytkownika</router-link>
-      </li>
-      <li>
-        <router-link to="/dashboard/calendar">Kalendarz</router-link>
-      </li>
-      <li>
-        <router-link to="/dashboard/certificates">Zaświadczenia</router-link>
-      </li>
-      <li>
-        <router-link to="/dashboard/reports">Raporty</router-link>
-      </li>
-      <!--  -->
-      <li>
-        <router-link to="/dashboard/contact">Kontakt</router-link>
-      </li>
-      <!--  -->
-      <li v-if="auth.isOrgAdmin || auth.isGovAdmin">
-        <router-link to="/dashboard/advert-publication">Publikacja ogłoszeń</router-link>
-      </li>
-      <li v-if="auth.isOrgAdmin">
-        <router-link to="/dashboard/alert-settings">Ustawienia alertów</router-link>
-      </li>
-      <li v-if="auth.isOrgAdmin || auth.isGovAdmin">
-        <router-link to="/dashboard/application-management">Zarządzanie zgłoszeniami</router-link>
-      </li>
-      <li v-if="auth.isOrgAdmin || auth.isGovAdmin">
-        <router-link to="/dashboard/opinions">Opinie</router-link>
-      </li>
-      <!-- TYLKO dla pełnych adminów rządowych -->
-      <li v-if="auth.isGovAdmin">
-        <router-link to="/dashboard/institution-verification">Weryfikacja organizacji</router-link>
-      </li>
+  <nav class="settings">
+    <RouterLink class="item" to="/dashboard/panel">Panel główny</RouterLink>
 
-      <li v-if="auth.isGovAdmin">
-        <router-link to="/dashboard/event-verification">Weryfikacja wydarzeń</router-link>
-      </li>
+    <RouterLink v-if="auth.isCoordinator" class="item" to="/dashboard/user">
+      Dane użytkownika
+    </RouterLink>
 
-      <!--  -->
-      <li v-if="auth.isVolunteer">
-        <router-link to="/dashboard/notification-settings">Ustawienia powiadomień</router-link>
-      </li>
-    </ul>
-  </div>
+    <RouterLink class="item" to="/dashboard/calendar">Kalendarz</RouterLink>
+    <RouterLink class="item" to="/dashboard/certificates">Zaświadczenia</RouterLink>
+    <RouterLink class="item" to="/dashboard/reports">Raporty</RouterLink>
+
+    <div class="divider" role="separator"></div>
+
+    <RouterLink class="item" to="/dashboard/contact">Kontakt</RouterLink>
+
+    <RouterLink
+      v-if="auth.isOrgAdmin || auth.isGovAdmin"
+      class="item"
+      to="/dashboard/advert-publication"
+    >
+      Publikacja ogłoszeń
+    </RouterLink>
+
+    <RouterLink v-if="auth.isOrgAdmin" class="item" to="/dashboard/alert-settings">
+      Ustawienia alertów
+    </RouterLink>
+
+    <RouterLink
+      v-if="auth.isOrgAdmin || auth.isGovAdmin"
+      class="item"
+      to="/dashboard/application-management"
+    >
+      Zarządzanie zgłoszeniami
+    </RouterLink>
+
+    <RouterLink v-if="auth.isOrgAdmin || auth.isGovAdmin" class="item" to="/dashboard/opinions">
+      Opinie
+    </RouterLink>
+
+    <RouterLink v-if="auth.isGovAdmin" class="item" to="/dashboard/institution-verification">
+      Weryfikacja organizacji
+    </RouterLink>
+
+    <RouterLink v-if="auth.isGovAdmin" class="item" to="/dashboard/event-verification">
+      Weryfikacja wydarzeń
+    </RouterLink>
+
+    <RouterLink v-if="auth.isVolunteer" class="item" to="/dashboard/notification-settings">
+      Ustawienia powiadomień
+    </RouterLink>
+  </nav>
 </template>
 
 <script setup>
 import { useAuthStore } from '@/stores/auth.js'
 const auth = useAuthStore()
 </script>
+
+<style scoped lang="scss">
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  background: $surface;
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  padding: 0.5rem;
+}
+
+/* pojedynczy link */
+.item {
+  display: block;
+  padding: 0.6rem 0.75rem;
+  border-radius: $radius-sm;
+  color: $muted-color;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-left-color 120ms ease;
+
+  border-left: 3px solid transparent;
+
+  &:hover {
+    background: $surface-hover;
+    color: $font-color;
+  }
+
+  /* aktywny stan — działa też dla zagnieżdżonych tras */
+  &.router-link-active,
+  &.router-link-exact-active {
+    background: rgba($blue-color, 0.08);
+    color: $blue-color;
+    font-weight: 600;
+    border-left-color: $blue-color;
+  }
+}
+
+/* separator sekcji */
+.divider {
+  height: 1px;
+  background: $border-color;
+  margin: 0.35rem 0;
+}
+</style>
 
 
 ==== ./frontend\src\components\dashboard\Categories\AllCalendar.vue ====
@@ -830,50 +908,164 @@ const auth = useAuthStore()
 
 ==== ./frontend\src\components\structure\Footer.vue ====
 <template>
-  <footer>To jest footer i huj.</footer>
+  <footer class="footer">
+    <div class="footer__inner">
+      <!-- Brand -->
+      <router-link to="/" class="brand" aria-label="Przejdź do strony głównej">
+        <img class="brand__logo" src="@/assets/logo.png" alt="" />
+        <span class="brand__name">Wolontariat</span>
+      </router-link>
+
+      <!-- Nawigacja skrótowa -->
+      <nav class="links" aria-label="Szybkie linki">
+        <router-link to="/">Ogłoszenia</router-link>
+        <router-link to="/dashboard">Panel</router-link>
+        <router-link to="/login">Logowanie</router-link>
+      </nav>
+
+      <!-- Kontakt / info -->
+      <div class="meta">
+        <p class="meta__line">
+          Masz pytania? <a href="mailto:kontakt@wolontariat.pl">kontakt@wolontariat.pl</a>
+        </p>
+        <p class="meta__line">© {{ year }} Wolontariat — wszystkie prawa zastrzeżone</p>
+      </div>
+    </div>
+  </footer>
 </template>
 
-<script setup></script>
+<script setup>
+const year = new Date().getFullYear()
+</script>
 
 <style scoped lang="scss">
-footer {
-  text-align: center;
-  font-size: 10px;
+.footer {
+  margin-top: 2rem;
+  background: $surface;
+  border-top: 1px solid $border-color;
+  color: $font-color;
+}
+
+.footer__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem;
+
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: inherit;
+
+  &__logo {
+    height: 36px;
+    width: auto;
+    display: block;
+  }
+  &__name {
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+}
+
+.links {
+  display: inline-flex;
+  gap: 0.75rem;
+
+  a {
+    padding: 0.3rem 0.55rem;
+    border-radius: $radius-sm;
+    transition:
+      background-color 120ms ease,
+      color 120ms ease;
+    color: $muted-color;
+
+    &:hover {
+      color: $blue-color;
+      background: $surface-hover;
+    }
+    &.router-link-exact-active {
+      color: $blue-color;
+      font-weight: 600;
+    }
+  }
+
+  @media (max-width: 900px) {
+    justify-content: center;
+  }
+}
+
+.meta {
+  text-align: right;
+
+  .meta__line {
+    margin: 0.1rem 0;
+    color: $muted-color;
+    font-size: 0.9rem;
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+
+      &:hover {
+        color: $red-color;
+      }
+    }
+  }
+
+  @media (max-width: 900px) {
+    text-align: center;
+  }
 }
 </style>
 
 
 ==== ./frontend\src\components\structure\Navbar.vue ====
 <template>
-  <nav>
-    <div class="left">
-      <router-link to="/">Ogłoszenia</router-link>
-      <router-link to="/login">Logowanie</router-link>
-      <router-link to="/dashboard">Panel</router-link>
-    </div>
+  <header class="navbar">
+    <div class="navbar__inner">
+      <router-link to="/" class="brand">
+        <img class="brand__logo" src="@/assets/logo.png" alt="Logo" />
+        <span class="brand__name">Wolontariat</span>
+      </router-link>
 
-    <div class="right" v-if="auth.rolesAvailable.length">
-      <!-- gdy jest więcej niż 1 rola: select do przełączania -->
-      <label v-if="auth.rolesAvailable.length > 1" class="role-switch">
-        Rola:
-        <select :value="auth.currentRole" @change="onChange">
-          <option v-for="r in auth.rolesAvailable" :key="r" :value="r">
-            {{ auth.ROLE_LABEL[r] || r }}
-          </option>
-        </select>
-      </label>
+      <nav class="nav">
+        <router-link to="/">Ogłoszenia</router-link>
+        <router-link to="/login">Logowanie</router-link>
+        <router-link to="/dashboard">Panel</router-link>
+      </nav>
 
-      <!-- gdy jest tylko jedna rola: pokazujemy ją jako tekst -->
-      <span v-else class="role-badge">
-        {{ auth.ROLE_LABEL[auth.currentRole] || auth.currentRole }}
-      </span>
+      <div class="role" v-if="auth.rolesAvailable.length">
+        <label v-if="auth.rolesAvailable.length > 1" class="role__switch">
+          Rola:
+          <select :value="auth.currentRole" @change="onChange" class="select">
+            <option v-for="r in auth.rolesAvailable" :key="r" :value="r">
+              {{ auth.ROLE_LABEL[r] || r }}
+            </option>
+          </select>
+        </label>
+        <span v-else class="badge">
+          {{ auth.ROLE_LABEL[auth.currentRole] || auth.currentRole }}
+        </span>
+      </div>
     </div>
-  </nav>
+  </header>
 </template>
 
 <script setup>
 import { useAuthStore } from '@/stores/auth.js'
-
 const auth = useAuthStore()
 function onChange(e) {
   auth.setRole(e.target.value)
@@ -881,40 +1073,87 @@ function onChange(e) {
 </script>
 
 <style scoped lang="scss">
-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 0;
+.navbar {
+  position: relative;
+  top: 0;
+  z-index: 50;
+  background: $surface;
+  border-bottom: 1px solid $border-color;
 }
 
-.left,
-.right {
-  display: flex;
+.navbar__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
   gap: 1rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: $font-color;
+
+  &__logo {
+    height: 36px;
+    width: auto;
+    display: block;
+  }
+  &__name {
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+}
+
+.nav {
+  display: inline-flex;
+  gap: 0.25rem;
+
+  a {
+    padding: 0.45rem 0.7rem;
+    border-radius: 8px;
+    transition:
+      background-color 120ms ease,
+      color 120ms ease;
+    color: $font-color;
+
+    &:hover {
+      background: $surface-hover;
+    }
+    &.router-link-exact-active {
+      color: $blue-color;
+      background: $surface-hover;
+      font-weight: 600;
+    }
+  }
+}
+
+.role {
+  display: inline-flex;
   align-items: center;
 }
-
-nav a {
-  text-decoration: none;
-  padding: 0.5rem 1rem;
+.role__switch {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
 }
-nav a:hover {
-  color: $blue-color;
+.select {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  background: $surface;
 }
-nav a.router-link-exact-active {
-  font-weight: bold;
-  color: $blue-color;
-}
-
-.role-switch select {
-  margin-left: 0.5rem;
-  padding: 0.25rem 0.5rem;
-}
-.role-badge {
-  padding: 0.25rem 0.5rem;
-  background: $background-dark;
-  border-radius: 0.5rem;
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  background: $surface-hover;
+  border: 1px solid $border-color;
+  font-weight: 600;
   font-size: 0.9rem;
 }
 </style>
@@ -1114,15 +1353,18 @@ import SettingsBar from '@/components/dashboard/SettingsBar.vue'
 
 <style scoped lang="scss">
 .dashboard {
-  display: flex;
-}
-.settings-bar {
-  height: 100%;
-  width: 30%;
-}
-.dashboard-field {
-  height: 100%;
-  width: 70%;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1rem;
+  padding: 1rem;
+
+  .settings-bar,
+  .dashboard-field {
+    background: $surface;
+    border: 1px solid $border-color;
+    border-radius: $radius-lg;
+    padding: 1rem;
+  }
 }
 </style>
 

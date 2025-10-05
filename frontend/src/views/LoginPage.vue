@@ -3,7 +3,7 @@
     <h2>Testowy login</h2>
     <p>Po kliknięciu poniżej dostaniesz wszystkie 4 role do wyboru w nawigacji.</p>
 
-    <button class="btn" @click="loginTest" :disabled="loading">
+    <button class="btn btn--primary" @click="loginTest" :disabled="loading">
       {{ loading ? 'Logowanie…' : 'Zaloguj testowo' }}
     </button>
 
@@ -51,17 +51,30 @@ async function loginTest() {
   max-width: 520px;
   margin: 3rem auto;
   padding: 2rem;
-  background: $background-dark;
-  border-radius: 12px;
+  background: $surface;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+
+  h2 {
+    margin: 0 0 0.25rem 0;
+  }
+  p {
+    color: $muted-color;
+    margin: 0 0 1rem 0;
+  }
 }
+
 .btn {
-  padding: 0.6rem 1rem;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
+  margin-top: 0.25rem;
 }
+
 .preview {
   margin-top: 1rem;
+
+  ul {
+    margin: 0.25rem 0 0 1rem;
+    color: $muted-color;
+  }
 }
 </style>
