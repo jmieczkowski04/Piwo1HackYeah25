@@ -1,4 +1,4 @@
-// Prosty mock danych kalendarza, zgodny z naszymi typami.
+// Prosty mock danych kalendarza, zgodny z naszymi typami
 export function mockEventsForUser() {
   // daty w ISO, kilka eventów przeszłych i przyszłych
   const now = new Date()
