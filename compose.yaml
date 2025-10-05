@@ -5,6 +5,7 @@ services:
       - "8080:8080" # api.krakow.pl
       - "3000:3000" # login.gov.pl
       - "80:80" # frontend
+      - "9000:9000" # volcon api admin
     depends_on:
       - login_gov_mock
       - volcon_api
@@ -21,8 +22,18 @@ services:
     build: volcon_api
     networks:
       - volcon-network
+    depends_on:
+      - typesense
   frontend:
     build: frontend
+    networks:
+      - volcon-network
+  typesense:
+    image: typesense/typesense:29.0
+    restart: on-failure
+    ports:
+      - "8108:8108"
+    command: '--data-dir /data --api-key=qwerty123 --enable-cors'
     networks:
       - volcon-network
 
