@@ -159,10 +159,16 @@ def login_page(request):
             print(response_data)
             print(response.status_code)
             if response.status_code == 301:
+<<<<<<< HEAD
                 user = User.objects.filter(id = response_data.get('user_id')).first()
                 if user is None:
                     return HttpResponse('Fuck You', content_type="text/plain")
                 url_to_redirect = get_attach_token_url(user)
+=======
+                message = f"Zalogowano! (przekierowanie niezaimplementowane)"
+                # getting url from environment variable
+                url_to_redirect = get_attach_token_url()
+>>>>>>> 1b4ca9d (Preparation for JWT on two backends)
                 return redirect(url_to_redirect)
             else:
                 message = response_data.get('error', 'Błąd logowania')
