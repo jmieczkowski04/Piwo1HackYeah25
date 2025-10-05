@@ -419,6 +419,10 @@ import { ep } from './endpoints.js'
 export const getCertificate = (eventId, userId, params = {}) =>
   api.get(ep.certificate(eventId, userId), { params })
 
+// Gdy backend zwraca PDF/plik – odbierz jako blob:
+export const getCertificateFile = (eventId, userId, params = {}) =>
+  api.get(ep.certificate(eventId, userId), { params, responseType: 'blob' })
+
 
 ==== ./frontend\src\api\chat.js ====
 import api from './axios.js'
@@ -1001,10 +1005,8 @@ async function fetchEvents() {
   loading.value = true
   error.value = ''
   try {
-    // Gdy backend będzie gotowy – zwróci realne dane.
     const uid = auth.user?.id || 'me'
     const data = await listEventsForUser(uid)
-    // spodziewamy się tablicy eventów
     events.value = Array.isArray(data) ? data : data?.events || []
   } catch (e) {
     // Fallback na mocki
@@ -1175,12 +1177,270 @@ function onRemoveUser(ev, grp, t) {
 
 ==== ./frontend\src\components\dashboard\Categories\AllCertificates.vue ====
 <template>
-    Pokazuje certyfikaty</br>
-    - wolontariusz może wygenerować certyfikaty z eventów, w których uczestniczył </br>
-    - organizator może wygenerować certyfikaty dla wolontariuszy uczestniczących w jego eventach </br>
-    - koordynator może wygenerować cetryfikaty dla wolontariuszy, któych zgłaszał </br>
-    - admin może wygenerować certyfikat każdemu wolontariuszowi
+  <div class="certs">
+    <header class="certs__head">
+      <h2>Generowanie certyfikatów</h2>
+      <p class="muted">
+        {{ roleHint }}
+      </p>
+    </header>
+
+    <div class="card grid-gap">
+      <!-- Wybór użytkownika -->
+      <div class="row">
+        <label class="lbl">Użytkownik</label>
+        <div class="stack">
+          <select class="select" v-model="selectedUserId" :disabled="userLocked">
+            <option v-for="u in usersOptions" :key="u.id" :value="u.id">{{ u.name }}</option>
+          </select>
+          <small class="muted" v-if="userLocked"
+            >Jako wolontariusz generujesz tylko dla siebie.</small
+          >
+        </div>
+      </div>
+
+      <!-- Wybór wydarzenia (zależny od użytkownika; tylko zakończone z udziałem) -->
+      <div class="row">
+        <label class="lbl">Wydarzenie</label>
+        <div class="stack">
+          <select class="select" v-model="selectedEventId">
+            <option v-if="eligibleEvents.length === 0" disabled value="">
+              Brak zakończonych wydarzeń dla wybranego użytkownika
+            </option>
+            <option v-for="e in eligibleEvents" :key="e.id" :value="e.id">
+              {{ e.name }} — {{ formatDate(e.end_date) }}
+            </option>
+          </select>
+          <small class="muted"
+            >Certyfikat dostępny tylko dla zakończonych wydarzeń, w których użytkownik brał
+            udział.</small
+          >
+        </div>
+      </div>
+
+      <!-- Akcja -->
+      <div class="row">
+        <button class="btn btn--primary" :disabled="!canGenerate" @click="generate">
+          Generuj certyfikat (PDF)
+        </button>
+        <span v-if="loading" class="muted">Generuję…</span>
+      </div>
+    </div>
+
+    <!-- Podgląd -->
+    <section class="history">
+      <h3>Wydarzenia kwalifikujące się do certyfikatu</h3>
+      <div class="list" v-if="eligibleEvents.length">
+        <div class="item" v-for="e in eligibleEvents" :key="e.id">
+          <div class="meta">
+            <strong>{{ e.name }}</strong>
+            <span class="muted">Zakończone: {{ formatDate(e.end_date) }}</span>
+          </div>
+          <button class="btn" @click="quickPick(e.id)">Wybierz</button>
+        </div>
+      </div>
+      <p v-else class="muted">Brak pozycji.</p>
+    </section>
+  </div>
 </template>
+
+<script setup>
+import { computed, onMounted, ref, watch } from 'vue'
+import { useAuthStore, ROLE } from '@/stores/auth.js'
+import { getCertificateFile } from '@/api/certificate.js'
+import {
+  mockUsers,
+  mockEvents,
+  mockEligibleEventsForUser,
+  mockCoordinatorVolunteers,
+  mockOrganizerVolunteers,
+  mockAllVolunteers,
+  mockCertificateBlob,
+} from '@/mocks/certificates.js'
+
+const auth = useAuthStore()
+
+const usersOptions = ref([])
+const selectedUserId = ref('')
+const selectedEventId = ref('')
+const loading = ref(false)
+
+// mock
+const events = ref(mockEvents)
+
+const role = computed(() => auth.currentRole)
+const userLocked = computed(() => role.value === ROLE.VOLUNTEER)
+
+const roleHint = computed(() => {
+  if (role.value === ROLE.VOLUNTEER)
+    return 'Wolontariusz: możesz generować certyfikaty tylko dla siebie.'
+  if (role.value === ROLE.COORDINATOR)
+    return 'Koordynator: możesz generować certyfikaty dla wolontariuszy, których zgłaszałeś.'
+  if (role.value === ROLE.ORG_ADMIN)
+    return 'Organizator: możesz generować certyfikaty dla wolontariuszy ze swoich wydarzeń.'
+  if (role.value === ROLE.GOV_ADMIN)
+    return 'Admin: możesz generować certyfikaty dla każdego wolontariusza.'
+  return ''
+})
+
+function buildUsersOptions() {
+  const me = auth.user?.id || 'u-1'
+  if (role.value === ROLE.VOLUNTEER) {
+    const self = mockUsers.find((u) => u.id === me) || { id: me, name: 'Ja' }
+    usersOptions.value = [self]
+    selectedUserId.value = self.id
+  } else if (role.value === ROLE.COORDINATOR) {
+    usersOptions.value = mockCoordinatorVolunteers(auth.user?.id).map((u) => ({
+      id: u.id,
+      name: u.name,
+    }))
+    selectedUserId.value ||= usersOptions.value[0]?.id || ''
+  } else if (role.value === ROLE.ORG_ADMIN) {
+    usersOptions.value = mockOrganizerVolunteers(auth.user?.id).map((u) => ({
+      id: u.id,
+      name: u.name,
+    }))
+    selectedUserId.value ||= usersOptions.value[0]?.id || ''
+  } else if (role.value === ROLE.GOV_ADMIN) {
+    usersOptions.value = mockAllVolunteers().map((u) => ({ id: u.id, name: u.name }))
+    selectedUserId.value ||= usersOptions.value[0]?.id || ''
+  } else {
+    // fallback
+    usersOptions.value = mockUsers
+    selectedUserId.value ||= usersOptions.value[0]?.id || ''
+  }
+}
+
+onMounted(() => {
+  buildUsersOptions()
+})
+
+// jeśli zmieni się rola / user – przebuduj listę
+watch(() => role.value, buildUsersOptions)
+watch(() => auth.user?.id, buildUsersOptions)
+
+const eligibleEvents = computed(() => {
+  return selectedUserId.value ? mockEligibleEventsForUser(selectedUserId.value) : []
+})
+
+watch(eligibleEvents, (list) => {
+  if (!list.find((e) => e.id === selectedEventId.value)) {
+    selectedEventId.value = list[0]?.id || ''
+  }
+})
+
+function formatDate(iso) {
+  const d = new Date(iso)
+  return d.toLocaleDateString()
+}
+
+function quickPick(eventId) {
+  selectedEventId.value = eventId
+}
+
+const canGenerate = computed(() => !!selectedUserId.value && !!selectedEventId.value)
+
+async function generate() {
+  if (!canGenerate.value) return
+  loading.value = true
+  try {
+    const ev = eligibleEvents.value.find((e) => e.id === selectedEventId.value)
+    const usr = usersOptions.value.find((u) => u.id === selectedUserId.value)
+
+    try {
+      const blob = await getCertificateFile(ev.id, usr.id)
+      triggerDownload(blob, fileName(ev, usr))
+    } catch (realErr) {
+      console.warn('getCertificateFile failed, using mock:', realErr?.message || realErr)
+      // Fallback – lokalny „PDF”
+      const blob = mockCertificateBlob({ event: ev, user: usr })
+      triggerDownload(blob, fileName(ev, usr))
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+function fileName(ev, usr) {
+  const safe = (s) =>
+    String(s || '')
+      .replace(/[^\p{L}\p{N}\-_ ]/gu, '')
+      .replace(/\s+/g, '_')
+  return `certyfikat_${safe(usr.name || usr.id)}_${safe(ev.name)}.pdf`
+}
+
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+</script>
+
+<style scoped lang="scss">
+.certs__head {
+  margin-bottom: 0.75rem;
+  .muted {
+    color: $muted-color;
+  }
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 0.75rem;
+  align-items: center;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lbl {
+  font-weight: 600;
+}
+
+.stack {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.history {
+  margin-top: 1rem;
+
+  h3 {
+    margin: 0 0 0.5rem 0;
+  }
+
+  .list {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid $border-color;
+    border-radius: $radius-md;
+    background: $surface;
+
+    .meta {
+      display: grid;
+      gap: 0.15rem;
+      .muted {
+        color: $muted-color;
+      }
+    }
+  }
+}
+</style>
 
 
 ==== ./frontend\src\components\dashboard\Categories\AllDashboard.vue ====
@@ -1192,14 +1452,251 @@ function onRemoveUser(ev, grp, t) {
 
 
 ==== ./frontend\src\components\dashboard\Categories\AllUserData.vue ====
-<template>W tym miejscu użytkownik będzie edytował swoje dane</template>
+<template>
+  <div class="new-vol">
+    <header class="head">
+      <h2>Zgłoszenie wolontariusza</h2>
+      <p class="muted">Koordynator: dodaj dane kandydata i przypisz go od razu do grupy.</p>
+    </header>
+
+    <form class="card grid-gap" @submit.prevent="onSubmit">
+      <div class="row">
+        <label class="lbl" for="firstName">Imię</label>
+        <input id="firstName" v-model.trim="form.firstName" class="input" required />
+      </div>
+
+      <div class="row">
+        <label class="lbl" for="lastName">Nazwisko</label>
+        <input id="lastName" v-model.trim="form.lastName" class="input" required />
+      </div>
+
+      <div class="row">
+        <label class="lbl" for="pesel">PESEL</label>
+        <input
+          id="pesel"
+          v-model.trim="form.pesel"
+          class="input"
+          maxlength="11"
+          inputmode="numeric"
+          placeholder="11 cyfr"
+          required
+        />
+        <small class="muted" v-if="form.pesel && !isPeselValid">Nieprawidłowy PESEL.</small>
+      </div>
+
+      <div class="row">
+        <label class="lbl" for="consent">Zgoda rodzica (skan)</label>
+        <input id="consent" type="file" class="input" accept=".pdf,image/*" @change="onFile" />
+        <small class="muted">PDF lub obraz (jpg/png). Opcjonalne, jeśli pełnoletni.</small>
+        <div v-if="fileName" class="fileinfo">
+          Wybrano: <strong>{{ fileName }}</strong>
+        </div>
+      </div>
+
+      <div class="row">
+        <label class="lbl" for="group">Przypisz do grupy</label>
+        <select id="group" class="select" v-model="selectedGroupKey" required>
+          <option disabled value="">— wybierz grupę —</option>
+          <option v-for="g in groups" :key="keyOf(g)" :value="keyOf(g)">
+            {{ g.eventName }} → {{ g.groupName }}
+          </option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn--primary" :disabled="submitting || !canSubmit">
+          {{ submitting ? 'Zgłaszanie…' : 'Zgłoś wolontariusza' }}
+        </button>
+        <span v-if="error" class="err">{{ error }}</span>
+        <span v-if="ok" class="ok">Zgłoszono (mock). W podglądzie poniżej masz szczegóły.</span>
+      </div>
+    </form>
+
+    <section class="preview card" v-if="lastPreview">
+      <h3>Podsumowanie zgłoszenia (mock)</h3>
+      <ul class="kv">
+        <li>
+          <span>Imię i nazwisko:</span><strong>{{ lastPreview.fullName }}</strong>
+        </li>
+        <li>
+          <span>PESEL:</span><strong>{{ lastPreview.pesel }}</strong>
+        </li>
+        <li>
+          <span>Grupa:</span>
+          <strong>{{ lastPreview.group.groupName }}</strong>
+          <small class="muted">({{ lastPreview.group.eventName }})</small>
+        </li>
+        <li>
+          <span>Plik zgody:</span><strong>{{ lastPreview.fileName || '—' }}</strong>
+        </li>
+        <li>
+          <span>Nadany ID (mock):</span><strong>{{ lastPreview.userId }}</strong>
+        </li>
+      </ul>
+    </section>
+  </div>
+</template>
+
+<script setup>
+import { computed, onMounted, ref } from 'vue'
+import { useAuthStore } from '@/stores/auth.js'
+import { mockGroupsForCoordinator } from '@/mocks/groups.js'
+// TODO: import { addUserToEventGroup } from '@/api/event.js'
+
+const auth = useAuthStore()
+
+const form = ref({
+  firstName: '',
+  lastName: '',
+  pesel: '',
+})
+const file = ref(null)
+const fileName = computed(() => file.value?.name || '')
+function onFile(e) {
+  const f = e.target.files?.[0]
+  file.value = f || null
+}
+
+// --- grupy (mock) ---
+const groups = ref([])
+onMounted(() => {
+  groups.value = mockGroupsForCoordinator(auth.user?.id)
+})
+const keyOf = (g) => `${g.eventId}|${g.groupId}`
+const selectedGroupKey = ref('')
+
+const isPeselValid = true
+
+// --- submit ---
+const submitting = ref(false)
+const error = ref('')
+const ok = ref(false)
+const lastPreview = ref(null)
+
+const canSubmit = computed(() => {
+  return form.value.firstName.trim() && form.value.lastName.trim() && selectedGroupKey.value
+})
+
+async function onSubmit() {
+  if (!canSubmit.value) return
+  submitting.value = true
+  error.value = ''
+  ok.value = false
+
+  try {
+    // 1) (TODO backend) Utworzenie użytkownika:
+    //    POST /user  -> { id }    (brak w spec – w mocku generujemy lokalne ID)
+    const userId = `mock-${Date.now().toString(36)}`
+
+    // 2) (TODO backend) Upload zgody rodzica:
+    //    np. POST /user/:userId/consent  multipart/form-data
+    //    W mocku tylko „udajemy” sukces.
+
+    // 3) Przypisanie do grupy:
+    const [eventId, groupId] = selectedGroupKey.value.split('|')
+
+    // Gdy backend gotowy:
+    // await addUserToEventGroup(eventId, groupId, userId)
+
+    const grp = groups.value.find((g) => g.eventId === eventId && g.groupId === groupId)
+    lastPreview.value = {
+      userId,
+      fullName: `${form.value.firstName} ${form.value.lastName}`,
+      pesel: form.value.pesel,
+      fileName: fileName.value,
+      group: grp,
+    }
+    ok.value = true
+
+    form.value.firstName = ''
+    form.value.lastName = ''
+    form.value.pesel = ''
+    file.value = null
+  } catch (e) {
+    error.value = e?.message || 'Coś poszło nie tak.'
+  } finally {
+    submitting.value = false
+  }
+}
+</script>
+
+<style scoped lang="scss">
+.head {
+  margin-bottom: 0.75rem;
+  .muted {
+    color: $muted-color;
+  }
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 0.75rem;
+  align-items: center;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lbl {
+  font-weight: 600;
+}
+
+.fileinfo {
+  font-size: 0.9rem;
+  color: $muted-color;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .err {
+    color: $red-color;
+  }
+  .ok {
+    color: $blue-color;
+  }
+}
+
+.preview {
+  margin-top: 1rem;
+
+  h3 {
+    margin: 0 0 0.5rem 0;
+  }
+
+  .kv {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 0.5rem;
+      padding: 0.35rem 0;
+
+      span {
+        color: $muted-color;
+      }
+
+      @media (max-width: 720px) {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}
+</style>
 
 
 ==== ./frontend\src\components\dashboard\Categories\CoordContact.vue ====
 <template>
-    Tutaj koordynator ma czat z organizatorem</br>
+    Tutaj użytkownik ma czat z organizatorem</br>
     Wybiera event, o którym chce rozmawiać</br>
-    Wtedy otworzy się czat - trzeba go jakoś wysrać
+    Wtedy otworzy się czat - trzeba go jakoś stworzyć
 </template>
 
 
@@ -1507,6 +2004,155 @@ function onChange(e) {
 </style>
 
 
+==== ./frontend\src\mocks\certificates.js ====
+// Uproszczone mocki pod certyfikaty.
+// Zakładamy, że certyfikat można wygenerować dla zakończonych eventów,
+// w których dany user brał udział (jest na przynajmniej 1 tasku).
+
+const now = new Date()
+const day = 24 * 60 * 60 * 1000
+const iso = (d) => new Date(d).toISOString()
+
+export const mockUsers = [
+  { id: 'u-1', name: 'Test User' }, // nasz zalogowany
+  { id: 'u-2', name: 'Wolontariusz Kowalski' },
+  { id: 'u-3', name: 'Wolontariusz Anna' },
+  { id: 'u-4', name: 'Wolontariusz Bartek' },
+  { id: 'u-8', name: 'Wolontariusz Ola' },
+]
+
+export const mockEvents = [
+  {
+    id: 'evt-100',
+    name: 'Porządkowanie Parku',
+    description: 'Akcja sprzątania po weekendzie.',
+    status: 'FINISHED',
+    institution_id: 'inst-3',
+    start_date: iso(now.getTime() - 7 * day),
+    end_date: iso(now.getTime() - 7 * day + 3 * 60 * 60 * 1000),
+    groups: [
+      {
+        id: 'grp-a',
+        name: 'Strefa wschodnia',
+        tasks: [
+          {
+            id: 'tsk-a1',
+            name: 'Zbieranie odpadów',
+            start_date: iso(now.getTime() - 7 * day),
+            end_date: iso(now.getTime() - 7 * day + 3 * 60 * 60 * 1000),
+            users: [{ id: 'u-1' }, { id: 'u-8' }],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'evt-101',
+    name: 'Zbiórka Żywności',
+    description: 'Akcja w kilku sklepach.',
+    status: 'FINISHED',
+    institution_id: 'inst-2',
+    start_date: iso(now.getTime() - 3 * day),
+    end_date: iso(now.getTime() - 3 * day + 6 * 60 * 60 * 1000),
+    groups: [
+      {
+        id: 'grp-b',
+        name: 'Sklep A',
+        tasks: [
+          {
+            id: 'tsk-b1',
+            name: 'Zmiana poranna',
+            start_date: iso(now.getTime() - 3 * day),
+            end_date: iso(now.getTime() - 3 * day + 3 * 60 * 60 * 1000),
+            users: [{ id: 'u-3' }],
+          },
+          {
+            id: 'tsk-b2',
+            name: 'Zmiana popołudniowa',
+            start_date: iso(now.getTime() - 3 * day + 3 * 60 * 60 * 1000),
+            end_date: iso(now.getTime() - 3 * day + 6 * 60 * 60 * 1000),
+            users: [{ id: 'u-4' }],
+          },
+        ],
+      },
+    ],
+  },
+  // Do podglądu – event bieżący (nie generujemy z niego certyfikatów)
+  {
+    id: 'evt-102',
+    name: 'Bieg Charytatywny',
+    description: 'Park Jordana.',
+    status: 'CONFIRMED',
+    institution_id: 'inst-1',
+    start_date: iso(now.getTime() + 2 * day),
+    end_date: iso(now.getTime() + 2 * day + 4 * 60 * 60 * 1000),
+    groups: [
+      {
+        id: 'grp-c',
+        name: 'Strefa Startu',
+        tasks: [
+          {
+            id: 'tsk-c1',
+            name: 'Rejestracja',
+            start_date: iso(now.getTime() + 2 * day),
+            end_date: iso(now.getTime() + 2 * day + 2 * 60 * 60 * 1000),
+            users: [{ id: 'u-1' }, { id: 'u-3' }],
+          },
+        ],
+      },
+    ],
+  },
+]
+
+// Zwraca listę eventów FINISHED, w których brał udział userId
+export function mockEligibleEventsForUser(userId) {
+  const finished = mockEvents.filter((e) => new Date(e.end_date).getTime() < Date.now())
+  return finished.filter((e) =>
+    (e.groups || []).some((g) =>
+      (g.tasks || []).some((t) => (t.users || []).some((u) => u.id === userId)),
+    ),
+  )
+}
+
+// Koordynator – przykładowo ma „pod sobą” u-3 i u-4
+export function mockCoordinatorVolunteers(coordinatorId) {
+  // coordinatorId nieużywany w mocku – zawsze ci sami
+  return mockUsers.filter((u) => ['u-3', 'u-4'].includes(u.id))
+}
+
+// Organizator – zwracamy wolontariuszy, którzy uczestniczyli w jego eventach (tu: inst-2)
+export function mockOrganizerVolunteers(organizerId) {
+  // organizerId nieużywany w mocku – uproszczenie
+  const involvedIds = new Set()
+  mockEvents
+    .filter((e) => e.institution_id === 'inst-2' || e.institution_id === 'inst-3')
+    .forEach((e) =>
+      e.groups.forEach((g) =>
+        g.tasks.forEach((t) => t.users.forEach((u) => involvedIds.add(u.id))),
+      ),
+    )
+  return mockUsers.filter((u) => involvedIds.has(u.id))
+}
+
+// Admin – wszyscy
+export function mockAllVolunteers() {
+  return mockUsers
+}
+
+// Fallback: „generujemy” pseudo-PDF (właściwie zwykły blob z tekstem)
+export function mockCertificateBlob({ event, user }) {
+  const text = `
+CERTYFIKAT UCZESTNICTWA
+Uczestnik: ${user?.name || user?.id}
+Wydarzenie: ${event?.name} (${event?.id})
+Data: ${new Date().toLocaleString()}
+
+To jest przykładowy mock certyfikatu (PDF placeholder).
+`
+  return new Blob([text], { type: 'application/pdf' })
+}
+
+
 ==== ./frontend\src\mocks\events.js ====
 // Prosty mock danych kalendarza, zgodny z naszymi typami.
 export function mockEventsForUser() {
@@ -1617,6 +2263,29 @@ export function mockEventsForUser() {
       ],
     },
   ]
+}
+
+
+==== ./frontend\src\mocks\groups.js ====
+import { mockEventsForUser } from './events.js'
+
+// Zwraca spłaszczoną listę grup (z eventami) widocznych dla koordynatora.
+// W mocku używamy tych samych eventów, co w kalendarzu.
+export function mockGroupsForCoordinator(coordinatorId = 'u-1') {
+  // Używamy listy eventów z mocka; w realu – zapytanie do backendu.
+  const events = mockEventsForUser()
+  const list = []
+  for (const ev of events) {
+    for (const g of ev.groups || []) {
+      list.push({
+        eventId: ev.id,
+        eventName: ev.name,
+        groupId: g.id,
+        groupName: g.name,
+      })
+    }
+  }
+  return list
 }
 
 
