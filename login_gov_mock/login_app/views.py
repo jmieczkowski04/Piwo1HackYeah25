@@ -1,9 +1,12 @@
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import redirect
 import json
 
 from .database import verify_user, create_user, is_user_unique
 from .models import User
+from .helpers import get_attach_token_url
+
 
 
 from django.shortcuts import render
@@ -23,8 +26,7 @@ def login_view(request):
             if user is None:
                 return JsonResponse({'error': 'Invalid credentials'}, status=401)
             
-            # TODO: make a correct redirect to main backend
-            return JsonResponse({'message': "Sukces a teraz wypierdalaj not implemented"}, status=301)
+            return JsonResponse({'user_id': user.id}, status=301)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
     else:
@@ -113,8 +115,13 @@ def register_page(request):
             print(response_data)
             print(response.status_code)
             if response.status_code == 201:
+                print('witamy w burdelu')
                 message = f"Zarejestrowano! ID użytkownika: {response_data.get('user_id')}"
-                return HttpResponse(message, content_type="text/plain")
+                user = User.objects.filter(id=response_data.get('user_id')).first()
+                if user is None:
+                    return JsonResponse({'error': 'Invalid id'}, status=401)
+                url_to_redirect = get_attach_token_url(user)
+                return redirect(url_to_redirect)
             else:
                 message = response_data.get('error', 'Błąd rejestracji')
                 return HttpResponse(message, content_type="text/plain")
@@ -144,18 +151,36 @@ def login_page(request):
 
         dummy_request = DummyRequest(data)
         response = login_view(dummy_request)
+        print(response.content)
+        print(response.status_code)
 
         try:
             response_data = json.loads(response.content)
             print(response_data)
             print(response.status_code)
             if response.status_code == 301:
-                message = f"Zalogowano! (przekierowanie niezaimplementowane)"
-                return HttpResponse(message, content_type="text/plain")
+                user = User.objects.filter(id = response_data.get('user_id')).first()
+                if user is None:
+                    return HttpResponse('Fuck You', content_type="text/plain")
+                url_to_redirect = get_attach_token_url(user)
+                return redirect(url_to_redirect)
             else:
                 message = response_data.get('error', 'Błąd logowania')
                 return HttpResponse(message, content_type="text/plain")
-            
         except Exception:
             message = 'Błąd logowania.'
     return render(request, 'login.html', {'message': message})
+
+@csrf_exempt
+def user_data_by_id(request):
+    id = None
+    if request.method == 'GET':
+        id = request.GET.get('id')
+        if id is None:
+            return JsonResponse({'error': 'Give id'}, status=401)
+        user = User.objects.filter(id=id).first()
+        if user is None:
+            return JsonResponse({'error': 'Invalid id'}, status=401)
+        # dopisać email i telefon
+        return JsonResponse({"id":user.id, "name": user.name, "surname": user.surname, "pesel": user.pesel}, status=200)
+    return JsonResponse({"error: get only"}, status=402)
