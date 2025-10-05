@@ -1,0 +1,22 @@
+{
+  "id": "string",
+  "name": "string",
+  "description": "string",
+  "admin_id": "string",
+  "parent_group_id": "string",
+  "institution_id": "string",
+  "location": {
+    "lat": "number",
+    "lng": "number"
+  },
+  "groups": [
+    {
+      "id": "string"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "string"
+    }
+  ]
+}

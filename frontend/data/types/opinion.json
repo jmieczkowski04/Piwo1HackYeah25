@@ -1,0 +1,6 @@
+{
+  "id": "string",
+  "group_id": "string",
+  "rating": "number",
+  "comment": "string"
+}

@@ -1,0 +1,35 @@
+{
+  "chat_id": "evt-101:u-3",
+  "event_id": "evt-101",
+  "participants": [
+    { "user_id": "u-3", "role": "VOLUNTEER", "display_name": "Wolontariusz Anna" },
+    { "user_id": "org-22", "role": "ORGANIZER", "display_name": "Organizator Marek" }
+  ],
+  "last_seen": {
+    "u-3": "2025-10-05T08:15:02.121Z",
+    "org-22": "2025-10-05T08:18:55.331Z"
+  },
+  "messages": [
+    {
+      "id": "m-1",
+      "ts": "2025-10-05T07:59:12.003Z",
+      "sender_id": "u-3",
+      "text": "Dzień dobry! Czy mogę zamienić zmianę na popołudniową?",
+      "meta": { "delivered": true, "read_at": "2025-10-05T08:03:20.000Z" }
+    },
+    {
+      "id": "m-2",
+      "ts": "2025-10-05T08:04:10.910Z",
+      "sender_id": "org-22",
+      "text": "Hej! Tak, spróbujemy to ogarnąć. Którą godzinę wolisz?",
+      "meta": { "delivered": true }
+    },
+    {
+      "id": "m-3",
+      "ts": "2025-10-05T08:06:42.410Z",
+      "sender_id": "u-3",
+      "text": "16:00–20:00 byłoby idealnie.",
+      "meta": { "delivered": true }
+    }
+  ]
+}

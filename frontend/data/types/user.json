@@ -1,0 +1,17 @@
+{
+  "id": "string",
+  "coordinates": {
+    "lat": "number",
+    "lng": "number"
+  },
+  "events": [
+    {
+      "id": "string"
+    }
+  ],
+  "opinions": [
+    {
+      "id": "string"
+    }
+  ]
+}
