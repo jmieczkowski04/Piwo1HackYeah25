@@ -263,7 +263,7 @@ async function rejectInst(inst) {
 
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .left {
